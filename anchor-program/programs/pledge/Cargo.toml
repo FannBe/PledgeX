@@ -1,0 +1,27 @@
+[package]
+name = "pledge"
+version = "0.2.0"
+description = "PledgeX: stake test SKR on a daily step goal; missed days are burned, completed days come back"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "pledge"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
+
+[dependencies]
+anchor-lang = "0.32.2"
+anchor-spl = { version = "0.32.2", default-features = false, features = ["token", "token_2022"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }

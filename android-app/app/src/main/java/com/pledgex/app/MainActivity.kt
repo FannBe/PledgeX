@@ -1,0 +1,45 @@
+package com.pledgex.app
+
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import com.pledgex.app.ui.PledgeApp
+import com.pledgex.app.ui.PledgeTheme
+import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
+
+class MainActivity : ComponentActivity() {
+    private val vm: PledgeViewModel by viewModels()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        // Must be created before the activity starts: it registers an activity-result launcher.
+        val sender = ActivityResultSender(this)
+        vm.setStepPermission(hasStepPermission())
+        setContent { PledgeTheme { PledgeApp(vm, sender) } }
+    }
+
+    fun hasStepPermission() = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
+        checkSelfPermission(Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_GRANTED
+
+    override fun onStart() {
+        super.onStart()
+        vm.start()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        vm.setStepPermission(hasStepPermission())
+        vm.onForeground()
+    }
+
+    override fun onStop() {
+        vm.stop()
+        super.onStop()
+    }
+}

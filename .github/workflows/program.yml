@@ -1,0 +1,23 @@
+name: Program build
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'anchor-program/**', '.github/workflows/program.yml' ]
+  pull_request:
+  workflow_dispatch:
+
+# Builds only. Deploying needs the upgrade authority, which is never stored in this repo.
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+      - name: Build program
+        working-directory: anchor-program
+        run: cargo-build-sbf --manifest-path programs/pledge/Cargo.toml

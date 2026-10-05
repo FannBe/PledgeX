@@ -1,0 +1,15 @@
+{
+  "name": "PledgeX Test SKR",
+  "symbol": "SKR",
+  "description": "Test token for PledgeX on Solana devnet. It has no value. Anyone can mint it from the PledgeX program's faucet; stakes for missed days are burned.",
+  "image": "https://fannbe.github.io/PledgeX/token/logo.png",
+  "external_url": "https://github.com/FannBe/PledgeX",
+  "attributes": [
+    { "trait_type": "Network", "value": "Solana Devnet" },
+    { "trait_type": "Value", "value": "None (test token)" }
+  ],
+  "properties": {
+    "files": [{ "uri": "https://fannbe.github.io/PledgeX/token/logo.png", "type": "image/png" }],
+    "category": "image"
+  }
+}

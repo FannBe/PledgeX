@@ -1,0 +1,21 @@
+{
+  "name": "pledgex-cli",
+  "private": true,
+  "description": "Devnet tools for PledgeX: an end-to-end run of the live program and the test token's metadata",
+  "type": "module",
+  "scripts": {
+    "e2e": "node cli/e2e-devnet.mjs"
+  },
+  "dependencies": {
+    "@metaplex-foundation/mpl-token-metadata": "^3.4.0",
+    "@metaplex-foundation/umi": "^1.6.0",
+    "@metaplex-foundation/umi-bundle-defaults": "^1.6.0",
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.99.0"
+  },
+  "overrides": {
+    "rpc-websockets": {
+      "uuid": "8.3.2"
+    }
+  }
+}
