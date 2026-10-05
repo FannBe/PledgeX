@@ -16,6 +16,7 @@ import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 class MainActivity : ComponentActivity() {
     private val vm: PledgeViewModel by viewModels()
     private val notifications = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    private val stepAccess = registerForActivityResult(ActivityResultContracts.RequestPermission()) { vm.setStepPermission(it) }
 
     /** Asked when a pledge is created: the daily reminder is a notification. */
     private fun askNotifications() {
@@ -30,6 +31,8 @@ class MainActivity : ComponentActivity() {
         // Must be created before the activity starts: it registers an activity-result launcher.
         val sender = ActivityResultSender(this)
         vm.setStepPermission(hasStepPermission())
+        // Steps are the core habit: without this permission Android delivers no step events at all.
+        if (!hasStepPermission()) stepAccess.launch(Manifest.permission.ACTIVITY_RECOGNITION)
         setContent { PledgeTheme { PledgeApp(vm, sender, ::askNotifications) } }
     }
 

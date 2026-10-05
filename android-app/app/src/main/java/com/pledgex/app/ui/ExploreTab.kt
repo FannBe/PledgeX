@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,7 +41,7 @@ import com.pledgex.app.chain.Kind
 import com.pledgex.app.chain.PledgeProgram
 import com.pledgex.app.fmt
 
-fun kindGlyph(kind: Int) = when (kind) { Kind.WAKE -> "⏰"; Kind.SCREEN -> "📵"; else -> "🚶" }
+fun kindGlyph(kind: Int) = when (kind) { Kind.WAKE -> Glyph.Alarm; Kind.SCREEN -> Glyph.PhoneOff; else -> Glyph.Walk }
 fun kindColor(kind: Int) = when (kind) { Kind.WAKE -> Amber; Kind.SCREEN -> Purple; else -> Mint }
 
 @Composable
@@ -66,7 +67,7 @@ fun ExploreTab(s: UiState, a: Actions) {
     GlassCard(padding = 0.dp) {
         PRESETS.forEachIndexed { i, p ->
             if (i > 0) HorizontalDivider(color = Hairline)
-            val active = s.commitment?.kind == p.spec.kind
+            val active = s.commitment?.let { it.kind == p.spec.kind && (it.kind != Kind.STEPS || it.targetSteps == p.spec.target) } == true
             Row(
                 Modifier.fillMaxWidth().clickable(enabled = s.commitment == null) { editing = p.spec }.padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -86,14 +87,14 @@ fun ExploreTab(s: UiState, a: Actions) {
         }
     }
     GlassCard {
-        Row { Text("ⓘ ", color = Cyan); Body("Activating locks the stake on chain. You see every term before your wallet signs.", TextLo, 13) }
+        Row(verticalAlignment = Alignment.CenterVertically) { FlatIcon(Glyph.Info, Cyan, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Body("Activating locks the stake on chain. You see every term before your wallet signs.", TextLo, 13) }
     }
 
     GlassCard {
         Overline("How each habit is checked", Cyan)
-        Pipeline("🚶 Steps", "The phone's hardware step counter. The phone reports the number; the program trusts it.", Mint)
-        Pipeline("⏰ 6 AM Club", "Solana's own clock. The program only accepts a clock-in in the first hour of the day, so this one can't be faked.", Amber)
-        Pipeline("📵 Screen detox", "Android usage statistics. The phone reports minutes; clock-in opens in the last two hours of the day.", Purple)
+        Pipeline("Steps", "The phone's hardware step counter. The phone reports the number; the program trusts it.", Mint)
+        Pipeline("6 AM Club", "Solana's own clock. The program only accepts a clock-in in the first hour of the day, so this one can't be faked.", Amber)
+        Pipeline("Screen detox", "Android usage statistics. The phone reports minutes; clock-in opens in the last two hours of the day.", Purple)
     }
     GlassCard {
         Overline("Escrow guarantees", Mint)
@@ -111,7 +112,7 @@ private fun Pipeline(title: String, text: String, color: Color) {
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Surface1).border(1.dp, Hairline, RoundedCornerShape(14.dp)).padding(12.dp),
     ) {
-        Text(title, color = color, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+        Text(title.uppercase(), color = color, fontWeight = FontWeight.Bold, fontSize = 12.sp, letterSpacing = 1.sp)
         Text(text, color = TextLo, fontSize = 12.sp, lineHeight = 17.sp)
     }
 }
@@ -134,7 +135,7 @@ private fun Configure(s: UiState, initial: HabitSpec, onCancel: () -> Unit, onLo
         title = { Text(title, fontFamily = Grotesk) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (custom) Choice("Habit", listOf(Kind.STEPS, Kind.WAKE, Kind.SCREEN), kind, { kindGlyph(it) + " " + com.pledgex.app.kindLabel(it) }) {
+                if (custom) Choice("Habit", listOf(Kind.STEPS, Kind.WAKE, Kind.SCREEN), kind, { com.pledgex.app.kindLabel(it) }) {
                     kind = it; target = if (it == Kind.SCREEN) 120 else 8_000
                 }
                 when (kind) {

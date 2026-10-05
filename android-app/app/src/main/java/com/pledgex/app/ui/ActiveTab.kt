@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -93,14 +94,18 @@ private fun DeadlineBanner(s: UiState, c: Commitment) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text(
-                when {
-                    missedWindow -> "🔥 Today's window has closed"
-                    waiting -> "⏳ Today's window opens soon"
-                    else -> "🔥 Daily window deadline"
-                },
-                color = Burn, fontWeight = FontWeight.SemiBold,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                FlatIcon(if (waiting) Glyph.Hourglass else Glyph.Flame, Burn, Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    when {
+                        missedWindow -> "Today's window has closed"
+                        waiting -> "Today's window opens soon"
+                        else -> "Daily window deadline"
+                    },
+                    color = Burn, fontWeight = FontWeight.SemiBold,
+                )
+            }
             Text("If missed: ${formatSkr(c.dailyStake)} test SKR burned", color = TextLo, fontSize = 13.sp)
         }
         Box(Modifier.clip(RoundedCornerShape(10.dp)).background(Burn.copy(alpha = 0.15f)).padding(horizontal = 10.dp, vertical = 6.dp)) {
@@ -137,6 +142,16 @@ private fun HabitHero(s: UiState, c: Commitment, a: Actions) {
         else -> s.todaySteps >= c.targetSteps
     }
 
+    if (c.kind == Kind.STEPS && s.hasStepSensor && !s.stepPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        GlassCard(glow = Brush.horizontalGradient(listOf(Amber, Amber.copy(alpha = 0.4f)))) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                FlatIcon(Glyph.Walk, Amber, Modifier.size(22.dp)); Spacer(Modifier.width(10.dp))
+                Text("Step counting is off", color = Amber, fontWeight = FontWeight.Bold)
+            }
+            Body("Android only shares your steps with apps you allow. Without it the counter stays at zero.")
+            GradientButton("Allow step counting") { stepPermission.launch(Manifest.permission.ACTIVITY_RECOGNITION) }
+        }
+    }
     GlassCard(glow = HeroBorder, padding = 20.dp) {
         Text("HABIT COMMITMENT", color = TextHi, fontSize = 15.sp, letterSpacing = 2.sp, fontFamily = Grotesk,
             modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
@@ -182,14 +197,12 @@ private fun HabitHero(s: UiState, c: Commitment, a: Actions) {
         }
         when {
             done -> GradientButton("Day ${day + 1} recorded ✓", enabled = false) {}
-            goalMet && open -> GradientButton("⚡ Clock in day ${day + 1}", busy = "clockin" in s.pending) { a.vm.clockIn(a.sender) }
+            goalMet && open -> GradientButton("Clock in day ${day + 1}", busy = "clockin" in s.pending) { a.vm.clockIn(a.sender) }
             else -> GradientButton(blockedLabel(s, c, day, open), enabled = false) {}
         }
         if (c.isDemo && c.kind == Kind.STEPS && !done) GhostButton("+1,000 simulated steps (demo only)", color = Amber) { a.vm.addDemoSteps(1_000) }
         if (c.kind == Kind.STEPS && !c.isDemo && !s.hasStepSensor) Body("This device has no step counter, so it cannot count steps for a real pledge.", Amber)
-        if (c.kind == Kind.STEPS && !c.isDemo && s.hasStepSensor && !s.stepPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            GhostButton("Allow step counting") { stepPermission.launch(Manifest.permission.ACTIVITY_RECOGNITION) }
-        }
+
         if (c.kind == Kind.SCREEN && !s.screenAccess) {
             Body("Screen time needs Android's \"Usage access\" for PledgeX.", Amber)
             GhostButton("Open Usage access settings") { context.startActivity(a.vm.screenAccessIntent()) }
@@ -272,7 +285,7 @@ private fun ResultCard(s: UiState, a: Actions) {
     val context = LocalContext.current
     val open = openUrl()
     GlassCard(glow = HeroBorder) {
-        Overline(if (r.completed == r.total) "Every day kept 🎉" else "Pledge settled", Mint)
+        Overline(if (r.completed == r.total) "Every day kept" else "Pledge settled", Mint)
         Row {
             StatTile("Returned", formatSkr(r.refund), Mint, "test SKR", Modifier.weight(1f))
             Spacer(Modifier.width(10.dp))

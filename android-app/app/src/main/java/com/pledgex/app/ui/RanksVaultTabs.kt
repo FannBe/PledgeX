@@ -117,15 +117,15 @@ private fun LeaderRow(rank: Int, p: Profile, me: Boolean, onClick: () -> Unit) {
 
 // ---- Vault ---------------------------------------------------------------------------------
 
-private data class Badge(val glyph: String, val title: String, val how: String, val tier: String, val color: Color, val earned: (Profile) -> Boolean)
+private data class Badge(val glyph: Glyph, val title: String, val how: String, val tier: String, val color: Color, val earned: (Profile) -> Boolean)
 
 private val BADGES = listOf(
-    Badge("🔒", "First Pledge", "Lock your first pledge", "Common", TextLo) { it.started >= 1 },
-    Badge("🚶", "10K Pioneer", "Keep every day of a steps pledge", "Rare", Mint) { it.perfectIn(Kind.STEPS) },
-    Badge("⏰", "6 AM Club Hero", "Keep every day of a 6 AM Club pledge", "Epic", Amber) { it.perfectIn(Kind.WAKE) },
-    Badge("📵", "Digital Detox", "Keep every day of a screen detox", "Epic", Purple) { it.perfectIn(Kind.SCREEN) },
-    Badge("🔥", "Week Streak", "Keep 7 days in a row", "Legendary", Gold) { it.bestStreak >= 7 },
-    Badge("🛡", "Iron Will", "Finish 3 pledges without missing a day", "Mythic", Cyan) { it.perfect >= 3 },
+    Badge(Glyph.Lock, "First Pledge", "Lock your first pledge", "Common", TextLo) { it.started >= 1 },
+    Badge(Glyph.Walk, "10K Pioneer", "Keep every day of a steps pledge", "Rare", Mint) { it.perfectIn(Kind.STEPS) },
+    Badge(Glyph.Alarm, "6 AM Club Hero", "Keep every day of a 6 AM Club pledge", "Epic", Amber) { it.perfectIn(Kind.WAKE) },
+    Badge(Glyph.PhoneOff, "Digital Detox", "Keep every day of a screen detox", "Epic", Purple) { it.perfectIn(Kind.SCREEN) },
+    Badge(Glyph.Flame, "Week Streak", "Keep 7 days in a row", "Legendary", Gold) { it.bestStreak >= 7 },
+    Badge(Glyph.Shield, "Iron Will", "Finish 3 pledges without missing a day", "Mythic", Cyan) { it.perfect >= 3 },
 )
 
 @Composable
@@ -134,7 +134,7 @@ fun VaultTab(s: UiState, a: Actions) {
     val c = s.commitment
     val p = s.profile
     GlassCard(glow = GlassBorder) {
-        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { Pill("🛡 NON-CUSTODIAL ESCROW · DEVNET", color = Mint) }
+        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { Pill("NON-CUSTODIAL ESCROW · DEVNET", dot = Mint, color = Mint) }
         Text(short(s.wallet!!), color = TextHi, fontSize = 20.sp, fontFamily = Grotesk, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
         Text(
             if (c != null) "${formatSkr(c.totalAmount)} SKR locked in escrow" else "Nothing locked right now",

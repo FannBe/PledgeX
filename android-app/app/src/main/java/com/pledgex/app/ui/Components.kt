@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -40,14 +41,17 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val CardShape = RoundedCornerShape(22.dp)
+private val CardShape = RoundedCornerShape(20.dp)
+private val CutShape = androidx.compose.foundation.shape.CutCornerShape(topStart = 14.dp, bottomEnd = 14.dp)
 
 /** A grouped dark surface with a hairline, or a Solana-gradient border when `glow`. */
 @Composable
 fun GlassCard(modifier: Modifier = Modifier, glow: Brush? = null, padding: Dp = 18.dp, content: @Composable ColumnScope.() -> Unit) {
     Column(
-        modifier.fillMaxWidth().clip(CardShape).background(Card)
-            .then(if (glow != null) Modifier.border(1.5.dp, glow, CardShape) else Modifier.border(1.dp, Hairline, CardShape))
+        modifier.fillMaxWidth()
+            .shadow(if (glow != null) 18.dp else 8.dp, CardShape, ambientColor = Purple, spotColor = if (glow != null) Mint else Cyan)
+            .clip(CardShape).background(CardFill)
+            .border(if (glow != null) 1.5.dp else 1.dp, glow ?: NeonEdge, CardShape)
             .padding(padding),
         verticalArrangement = Arrangement.spacedBy(10.dp),
         content = content,
@@ -65,21 +69,23 @@ fun GradientButton(
 ) {
     val on = enabled && !busy
     Box(
-        modifier.fillMaxWidth().height(54.dp).clip(RoundedCornerShape(16.dp))
+        modifier.fillMaxWidth().height(54.dp)
+            .then(if (on) Modifier.shadow(14.dp, CutShape, ambientColor = Purple, spotColor = Mint) else Modifier)
+            .clip(CutShape)
             .background(if (on || busy) brush else Brush.horizontalGradient(listOf(CardHigh, CardHigh)))
             .clickable(enabled = on, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         if (busy) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.5.dp, color = OnGradient)
-        else Text(text, color = if (on) OnGradient else TextLo, fontWeight = FontWeight.Bold, fontSize = 15.sp, fontFamily = Grotesk)
+        else Text(text.uppercase(), color = if (on) OnGradient else TextLo, fontWeight = FontWeight.Bold, fontSize = 14.sp, fontFamily = Grotesk, letterSpacing = 1.2.sp)
     }
 }
 
 @Composable
 fun GhostButton(text: String, modifier: Modifier = Modifier, enabled: Boolean = true, busy: Boolean = false, color: Color = TextHi, onClick: () -> Unit) {
     Box(
-        modifier.fillMaxWidth().height(48.dp).clip(RoundedCornerShape(14.dp)).background(Surface1)
-            .border(1.dp, HairlineStrong, RoundedCornerShape(14.dp)).clickable(enabled = enabled && !busy, onClick = onClick)
+        modifier.fillMaxWidth().height(48.dp).clip(CutShape).background(Surface1)
+            .border(1.dp, color.copy(alpha = 0.45f), CutShape).clickable(enabled = enabled && !busy, onClick = onClick)
             .alpha(if (enabled) 1f else 0.5f),
         contentAlignment = Alignment.Center,
     ) {
@@ -131,11 +137,11 @@ fun Mono(text: String, color: Color = Mint, size: Int = 15) =
 @Composable
 fun StatTile(label: String, value: String, color: Color, sub: String, modifier: Modifier = Modifier) {
     Column(
-        modifier.clip(RoundedCornerShape(18.dp)).background(Card).border(1.dp, Hairline, RoundedCornerShape(18.dp)).padding(14.dp),
+        modifier.clip(RoundedCornerShape(18.dp)).background(CardFill).border(1.dp, color.copy(alpha = 0.35f), RoundedCornerShape(18.dp)).padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(label, color = TextLo, fontSize = 12.sp)
-        Text(value, color = color, fontSize = 22.sp, fontFamily = Grotesk, fontWeight = FontWeight.Bold)
+        Text(value, color = color, fontSize = 22.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
         Text(sub, color = TextDim, fontSize = 11.sp)
     }
 }
@@ -148,14 +154,14 @@ fun KeyValue(label: String, value: String, valueColor: Color = TextHi) {
     }
 }
 
-/** A square icon tile with an emoji glyph, tinted like the old catalog icons. */
+/** A square tile with a flat line icon, tinted like the old catalog icons. */
 @Composable
-fun IconTile(glyph: String, tint: Color, size: Dp = 46.dp) {
+fun IconTile(glyph: Glyph, tint: Color, size: Dp = 46.dp) {
     Box(
-        Modifier.size(size).clip(RoundedCornerShape(14.dp)).background(tint.copy(alpha = 0.14f))
-            .border(1.dp, tint.copy(alpha = 0.45f), RoundedCornerShape(14.dp)),
+        Modifier.size(size).clip(RoundedCornerShape(14.dp)).background(tint.copy(alpha = 0.12f))
+            .border(1.dp, tint.copy(alpha = 0.55f), RoundedCornerShape(14.dp)),
         contentAlignment = Alignment.Center,
-    ) { Text(glyph, fontSize = (size.value * 0.45f).sp, textAlign = TextAlign.Center) }
+    ) { FlatIcon(glyph, tint, Modifier.size(size * 0.5f)) }
 }
 
 /** The habit ring: a dim track and a Solana-gradient arc. */

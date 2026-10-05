@@ -68,6 +68,13 @@ wallet ─────────────────────── fau
 - Devnet only. Test SKR has no value and is not the real SKR token.
 - **Gas sponsor.** The public devnet airdrop is often down or rate-limited. When it fails, the release APK falls back to a bundled devnet-only key that sends an empty wallet 0.015 SOL, enough for one pledge. That key holds only a little devnet SOL and has no authority over the program or the token. Builds without `sponsor.seed` in `local.properties` skip this step.
 
+## Roadmap
+
+- **Compressed NFT badges.** Badges are already on chain today as the non-transferable `Profile` account. The next step is to mint each badge as a soulbound Metaplex Bubblegum cNFT, so it shows in any wallet. This was not built for the hackathon deadline.
+- **Health Connect and wearables**, so watches and fitness bands count steps too.
+- **Mainnet with real SKR**, with an optional stablecoin stake.
+- **Group pledges**: missed stakes still burn, so nobody gains from anyone else's miss.
+
 ## Repository
 
 | Path | What |

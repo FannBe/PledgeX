@@ -4,93 +4,227 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PledgeX</title>
-<meta name="description" content="Stake test SKR on your daily steps on Solana devnet. Walk and it comes back; skip a day and that day's stake burns.">
+<meta name="description" content="Stake on your daily habits on Solana. Keep the day and your stake comes back; miss it and that day's stake is burned, so nobody profits from your failure.">
 <link rel="icon" type="image/png" href="favicon.png">
-<meta property="og:title" content="PledgeX">
-<meta property="og:description" content="Stake on your daily steps. Walk and it comes back; skip a day and that day's stake burns.">
+<meta property="og:title" content="PledgeX: stake on your daily habits">
+<meta property="og:description" content="Keep the day and your stake comes back. Miss it and that day's stake burns on Solana.">
 <meta property="og:image" content="https://fannbe.github.io/PledgeX/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  :root { --ink:#0b0b12; --card:#16161f; --line:#2a2a38; --hi:#f4f4f8; --lo:#9a9ab0; --purple:#9945ff; --teal:#14f195; --amber:#ffb547; }
+  :root { --void:#04050a; --card:#0e1220; --edge:rgba(0,240,255,.22); --hi:#fff; --lo:#a0b4d0; --dim:#5f6e8a;
+          --purple:#9945ff; --mint:#14f195; --cyan:#00f0ff; --amber:#ff9f0a; --burn:#ff453a; --gold:#ffd60a; }
   * { box-sizing: border-box; }
-  body { margin:0; background:var(--ink); color:var(--hi); font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
-  main { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
-  a { color: var(--teal); }
-  .hero { text-align:center; padding: 24px 0 8px; }
-  .hero img { width: 148px; height: 148px; }
-  h1 { font-size: 44px; margin: 8px 0 4px; letter-spacing: -0.02em; }
-  .tag { color: var(--lo); font-size: 19px; max-width: 560px; margin: 0 auto 24px; }
-  .btns { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
-  .btn { display:inline-block; padding: 13px 22px; border-radius: 14px; font-weight:600; text-decoration:none; }
-  .btn.primary { background: var(--purple); color:#fff; }
-  .btn.ghost { border:1px solid var(--line); color: var(--hi); }
-  h2 { font-size: 24px; margin: 48px 0 12px; }
-  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
-  .card { background: var(--card); border:1px solid var(--line); border-radius: 18px; padding: 18px; }
-  .card b { display:block; margin-bottom: 4px; }
+  html { scroll-behavior: smooth; }
+  body { margin:0; color:var(--hi); font:16px/1.6 "Plus Jakarta Sans",system-ui,sans-serif;
+    background:
+      radial-gradient(900px 600px at 0% 0%, rgba(153,69,255,.22), transparent 60%),
+      radial-gradient(900px 600px at 100% 100%, rgba(20,241,149,.12), transparent 60%),
+      linear-gradient(rgba(0,240,255,.035) 1px, transparent 1px) 0 0/36px 36px,
+      linear-gradient(90deg, rgba(0,240,255,.035) 1px, transparent 1px) 0 0/36px 36px,
+      var(--void);
+    background-attachment: fixed; }
+  a { color: var(--cyan); }
+  main { max-width: 1040px; margin: 0 auto; padding: 0 16px 72px; }
+  nav { position: sticky; top: 0; z-index: 5; backdrop-filter: blur(10px); background: rgba(4,5,10,.72); border-bottom: 1px solid var(--edge); }
+  nav .in { max-width: 1040px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  nav .brand { display:flex; align-items:center; gap:8px; font-family:"Space Grotesk"; font-weight:700; color:#fff; text-decoration:none; margin-right:auto; }
+  nav .brand b { color: var(--mint); }
+  nav a.l { color: var(--lo); text-decoration: none; font-size: 14px; }
+  nav a.l:hover { color: var(--mint); }
+  .strip { margin: 16px 0 0; display:flex; gap:10px; align-items:center; padding:9px 14px; border-radius:12px; border:1px solid rgba(20,241,149,.4);
+    background: #070912; font: 600 12px/1 "JetBrains Mono", monospace; color: var(--mint); letter-spacing:.06em; flex-wrap: wrap; }
+  .strip .dot { width:7px; height:7px; border-radius:50%; background: var(--mint); box-shadow: 0 0 10px var(--mint); }
+  .strip .r { margin-left:auto; color: var(--cyan); }
+  .hero { display:grid; grid-template-columns: 1.1fr .9fr; gap: 32px; align-items:center; padding: 48px 0 24px; }
+  .hero h1 { font: 700 clamp(44px, 7vw, 72px)/1 "Space Grotesk"; margin: 10px 0 14px; letter-spacing: -.02em; }
+  .hero h1 span { background: linear-gradient(90deg, var(--purple), var(--mint)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p.tag { color: var(--lo); font-size: 19px; margin: 0 0 22px; }
+  .chips { display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 22px; }
+  .chip { font: 700 11px/1 "Space Grotesk"; letter-spacing: .12em; padding: 7px 10px; border-radius: 8px; border:1px solid; }
+  .btns { display:flex; gap:12px; flex-wrap:wrap; }
+  .btn { display:inline-block; padding: 14px 22px; font: 700 14px/1 "Space Grotesk"; letter-spacing: .1em; text-transform: uppercase; text-decoration:none;
+    clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px); }
+  .btn.primary { background: linear-gradient(90deg, var(--purple), var(--mint)); color: #030d08; box-shadow: 0 0 30px rgba(20,241,149,.35); }
+  .btn.ghost { background: #090c16; color: var(--cyan); outline: 1px solid rgba(0,240,255,.5); outline-offset: -1px; }
+  .hero .shot { justify-self: center; }
+  .phone { width: 100%; max-width: 330px; border-radius: 26px; border: 1.5px solid rgba(20,241,149,.55); box-shadow: 0 0 40px rgba(153,69,255,.35), 0 0 80px rgba(20,241,149,.12); display:block; height: auto; }
+  h2 { font: 700 30px/1.2 "Space Grotesk"; margin: 64px 0 8px; }
+  .over { font: 600 12px/1 "Plus Jakarta Sans"; letter-spacing: .16em; text-transform: uppercase; color: var(--mint); margin-top: 64px; }
+  .over + h2 { margin-top: 8px; }
+  .sub { color: var(--lo); margin: 0 0 20px; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .card { background: linear-gradient(180deg, #161b2e, #0c0f1c 60%, #07080f); border:1px solid var(--edge); border-radius: 20px; padding: 20px;
+    box-shadow: 0 0 24px rgba(153,69,255,.10); }
+  .card.hero-edge { border-color: rgba(20,241,149,.6); }
+  .card h3 { font: 700 18px/1.3 "Space Grotesk"; margin: 10px 0 6px; }
   .card p { margin: 0; color: var(--lo); font-size: 15px; }
-  ol { padding-left: 20px; } ol li { margin: 6px 0; }
-  code { background: #1f1f2b; padding: 2px 6px; border-radius: 6px; font-size: 13px; word-break: break-all; }
+  .ico { width: 44px; height: 44px; border-radius: 13px; display:grid; place-items:center; border:1px solid; }
+  .ico svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .num { font: 700 13px/1 "JetBrains Mono"; color: var(--cyan); }
+  .gallery { display:flex; gap: 16px; overflow-x: auto; padding: 8px 2px 18px; scroll-snap-type: x mandatory; }
+  .gallery figure { margin:0; flex: 0 0 auto; width: min(260px, 72vw); scroll-snap-align: start; }
+  .gallery img { width: 100%; height: auto; border-radius: 20px; border: 1px solid var(--edge); display:block; }
+  .gallery figcaption { color: var(--lo); font-size: 13px; margin-top: 8px; }
+  ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display:grid; gap: 10px; }
+  ol.steps li { counter-increment: s; position: relative; padding: 16px 16px 16px 60px; border-radius: 16px; background: #0b0f1d; border: 1px solid var(--edge); color: var(--lo); }
+  ol.steps li b { color: #fff; }
+  ol.steps li::before { content: counter(s); position: absolute; left: 16px; top: 14px; width: 30px; height: 30px; border-radius: 50%;
+    display:grid; place-items:center; background: linear-gradient(135deg, var(--purple), var(--mint)); color: #030d08; font: 700 14px/1 "Space Grotesk"; }
   table { width:100%; border-collapse: collapse; font-size: 14px; }
-  td { padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  td:first-child { color: var(--lo); width: 34%; }
-  .note { border-left: 3px solid var(--amber); padding: 4px 14px; color: var(--lo); }
-  footer { margin-top: 56px; color: var(--lo); font-size: 13px; text-align:center; }
+  td, th { padding: 11px 8px; border-bottom: 1px solid rgba(0,240,255,.12); vertical-align: top; text-align: left; }
+  th { color: var(--mint); font: 600 12px/1.2 "Plus Jakarta Sans"; letter-spacing: .12em; text-transform: uppercase; }
+  td:first-child { color: var(--lo); white-space: nowrap; }
+  code { font: 500 12.5px/1.4 "JetBrains Mono", monospace; background: #0b0f1d; border:1px solid rgba(0,240,255,.15); padding: 2px 6px; border-radius: 6px; word-break: break-all; color: #d8e4ff; }
+  .flow { display:grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; align-items: stretch; }
+  .flow .node { padding: 14px; border-radius: 14px; background:#0b0f1d; border:1px solid var(--edge); }
+  .flow .node b { display:block; font: 700 13px/1.3 "Space Grotesk"; letter-spacing:.08em; text-transform: uppercase; margin-bottom: 4px; }
+  .flow .node span { color: var(--lo); font-size: 13px; }
+  .note { border-left: 3px solid var(--amber); padding: 8px 14px; color: var(--lo); background: rgba(255,159,10,.05); border-radius: 0 10px 10px 0; }
+  .two { display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  footer { margin-top: 72px; color: var(--dim); font-size: 13px; text-align:center; }
+  @media (max-width: 760px) { .hero { grid-template-columns: 1fr; padding-top: 28px; } .two { grid-template-columns: 1fr; } nav a.l { display:none; } td:first-child { white-space: normal; } }
 </style>
 </head>
 <body>
+<nav><div class="in">
+  <a class="brand" href="#"><img src="favicon.png" width="26" height="26" alt="">SEEKER <b>PledgeX</b></a>
+  <a class="l" href="#how">How it works</a><a class="l" href="#habits">Habits</a><a class="l" href="#app">App</a>
+  <a class="l" href="#judges">Judges</a><a class="l" href="#chain">On chain</a><a class="l" href="https://github.com/FannBe/PledgeX">GitHub</a>
+</div></nav>
 <main>
+  <div class="strip"><span class="dot"></span>SOLANA DEVNET: LIVE · PROGRAM 68c1…FRcd<a class="r" href="https://explorer.solana.com/address/68c1eNdHAfNWJhCWhtqumiqzYyFcDNLkfgwKwdFwFRcd?cluster=devnet">EXPLORER ↗</a></div>
+
   <section class="hero">
-    <img src="logo.png" alt="PledgeX logo" width="148" height="148">
-    <h1>PledgeX</h1>
-    <p class="tag">Stake on your daily habits: steps, the 6 AM Club, a screen detox. Keep the day and it comes back. Miss it and that day's stake burns: nobody receives it, not even us.</p>
-    <div class="btns">
-      <a class="btn primary" href="https://github.com/FannBe/PledgeX/releases">Download the Android app</a>
-      <a class="btn ghost" href="https://github.com/FannBe/PledgeX">Source code</a>
+    <div>
+      <img src="logo.png" alt="PledgeX logo" width="96" height="96">
+      <h1>Pledge<span>X</span></h1>
+      <p class="tag">Stake on your daily habits. Keep the day and your stake comes back. Miss it, and that day's stake is <b>burned</b> on Solana, so nobody profits from your failure, not even us.</p>
+      <div class="chips">
+        <span class="chip" style="color:var(--mint);border-color:rgba(20,241,149,.5)">STEPS</span>
+        <span class="chip" style="color:var(--gold);border-color:rgba(255,214,10,.5)">6 AM CLUB</span>
+        <span class="chip" style="color:var(--purple);border-color:rgba(153,69,255,.6)">SCREEN DETOX</span>
+      </div>
+      <div class="btns">
+        <a class="btn primary" href="https://github.com/FannBe/PledgeX/releases/latest">Download APK</a>
+        <a class="btn ghost" href="#judges">6-minute demo</a>
+        <a class="btn ghost" href="https://github.com/FannBe/PledgeX">Source</a>
+      </div>
+    </div>
+    <div class="shot"><img class="phone" src="screens/explore.jpg" alt="The PledgeX habit catalog" width="540" height="801"></div>
+  </section>
+
+  <section id="how">
+    <div class="over">How it works</div>
+    <h2>Three steps, all on chain</h2>
+    <p class="sub">Each step is a real Solana transaction you can open on Explorer.</p>
+    <div class="grid">
+      <div class="card"><span class="num">01 · PLEDGE</span><h3>Lock a stake</h3><p>Choose a habit, a number of days and a stake. <code>create_commitment</code> moves the stake into a vault owned by the PledgeX program. No team key can touch it.</p></div>
+      <div class="card"><span class="num">02 · CLOCK IN</span><h3>One tap a day</h3><p>Keep the habit, then tap Clock in. A key kept on your phone signs <code>clock_in</code>, so there is no wallet screen each morning. That key can clock in and nothing else.</p></div>
+      <div class="card"><span class="num">03 · SETTLE</span><h3>Kept days back, missed days burned</h3><p>After the last day anyone can call <code>settle</code>. Kept days return to you, missed days are destroyed with SPL <code>burn</code>, and the accounts close with their rent sent back to you.</p></div>
     </div>
   </section>
 
-  <h2>How it works</h2>
-  <div class="grid">
-    <div class="card"><b>1 · Pledge</b><p>Choose a daily step goal, a number of days and a stake. The stake moves into an escrow account of the PledgeX program on Solana.</p></div>
-    <div class="card"><b>2 · Walk and clock in</b><p>When your phone's step counter reaches the goal, tap Clock in. A key kept on the phone signs it, so there is no wallet screen. That key can clock in and nothing else.</p></div>
-    <div class="card"><b>3 · Settle</b><p>After the last day, the program returns the days you kept and burns the days you missed. Anyone can trigger settle, but the refund only goes to you.</p></div>
-  </div>
+  <section id="habits">
+    <div class="over">Habits</div>
+    <h2>Habits the program enforces</h2>
+    <p class="sub">The program refuses a clock-in outside the window, below the goal, over the limit, twice in one day, or signed by any other key.</p>
+    <div class="grid">
+      <div class="card"><div class="ico" style="color:var(--mint);border-color:rgba(20,241,149,.55)"><svg viewBox="0 0 24 24"><circle cx="13.4" cy="3.4" r="1.6" fill="currentColor"/><path d="M12.7 6.7 11 13.4M7.2 10.6 12 7.7l4.3 3.3M11 13.4 7.9 21.6M11 13.4l3.4 3.9 1 4.3"/></svg></div>
+        <h3>Steps</h3><p>3,000 to 10,000 steps a day, counted by the phone's hardware step counter. Clock in any time once you reach the goal.</p></div>
+      <div class="card"><div class="ico" style="color:var(--amber);border-color:rgba(255,159,10,.55)"><svg viewBox="0 0 24 24"><circle cx="12" cy="13.2" r="7.7"/><path d="M12 9.1v4.1l3.1 1.9M3.1 6.5l3.4-3.4M20.9 6.5l-3.4-3.4"/></svg></div>
+        <h3>The 6:00 AM Club</h3><p>Clock in between 05:00 and 06:00 local time. <b>Solana's clock alone decides</b>: the program accepts a clock-in only in the first hour of the day, so this one cannot be faked.</p></div>
+      <div class="card"><div class="ico" style="color:var(--purple);border-color:rgba(153,69,255,.6)"><svg viewBox="0 0 24 24"><rect x="7.2" y="1.9" width="9.6" height="20.2" rx="2"/><path d="M10.6 19.2h2.8M2.9 2.9l18.2 18.2"/></svg></div>
+        <h3>Screen detox</h3><p>Stay under 1, 2 or 3 hours of screen time, read from Android's usage statistics. Clock in between 22:00 and midnight, once the day's total is known.</p></div>
+    </div>
+  </section>
 
-  <h2>Habits the program enforces</h2>
-  <div class="grid">
-    <div class="card"><b>Steps</b><p>3,000–10,000 a day, from the phone's hardware step counter. The phone reports the count.</p></div>
-    <div class="card"><b>The 6:00 AM Club</b><p>Clock in between 05:00 and 06:00. Solana's clock alone decides, so this one cannot be faked.</p></div>
-    <div class="card"><b>Screen detox</b><p>Stay under 1–3 hours of screen time, from Android's usage statistics. Clock in between 22:00 and midnight.</p></div>
-  </div>
-  <p>The app also has a leaderboard and live activity read from the chain, soulbound badges from your on-chain Profile, daily reminders and a shareable result card.</p>
+  <section id="app">
+    <div class="over">The app</div>
+    <h2>Built for the Seeker</h2>
+    <p class="sub">Kotlin and Jetpack Compose on a pitch-black OLED theme in Solana purple and mint. Four tabs and a Judge Lab.</p>
+    <div class="gallery">
+      <figure><img src="screens/explore.jpg" alt="Explore tab" width="540" height="801" loading="lazy"><figcaption><b>Explore</b> · the habit catalog; every term is shown before the wallet signs.</figcaption></figure>
+      <figure><img src="screens/settle.jpg" alt="Active tab at settle" width="540" height="801" loading="lazy"><figcaption><b>Active</b> · today's ring and deadline, then settle: refund and burn.</figcaption></figure>
+      <figure><img src="screens/ranks.jpg" alt="Ranks tab" width="540" height="801" loading="lazy"><figcaption><b>Ranks</b> · leaderboard, totals and live activity, read from the program.</figcaption></figure>
+      <figure><img src="screens/vault.jpg" alt="Vault tab" width="540" height="801" loading="lazy"><figcaption><b>Vault</b> · escrow, lifetime totals and soulbound badges.</figcaption></figure>
+      <figure><img src="screens/judge-lab.jpg" alt="Judge Lab" width="540" height="801" loading="lazy"><figcaption><b>Judge Lab</b> · a guided six-minute demo; each step is ticked off from chain state.</figcaption></figure>
+    </div>
+    <div class="grid">
+      <div class="card"><h3>Two ways in</h3><p>Connect Phantom or Solflare through Mobile Wallet Adapter, or use a demo wallet kept on the phone. Both send the same real transactions.</p></div>
+      <div class="card"><h3>Soulbound badges</h3><p>Six badges (First Pledge, 10K Pioneer, 6 AM Club Hero, Digital Detox, Week Streak, Iron Will), read from your on-chain <code>Profile</code>: a program account that cannot be sold or transferred.</p></div>
+      <div class="card"><h3>Ranks from the chain</h3><p>A leaderboard by days kept, total staked and burned, the success rate and the latest program transactions, all read from devnet when the tab opens.</p></div>
+      <div class="card"><h3>Reminders &amp; sharing</h3><p>A notification before today's window closes (or when the 6 AM window opens), and a result card to share with its Explorer link.</p></div>
+    </div>
+  </section>
 
-  <h2>Try the whole thing in six minutes</h2>
-  <ol>
-    <li>Install the app. Tap <b>Use a demo wallet</b>, or connect Phantom with Testnet Mode on (Settings → Developer Settings). Then open <b>Judge Lab</b> in the header: it walks you through the steps below.</li>
-    <li>Tap <b>Get devnet SOL</b>, then <b>Get 10,000 test SKR</b>. The test SKR comes from the program's own faucet.</li>
-    <li>Create a pledge with <b>Day length: Demo (2 minutes)</b> and 3 days.</li>
-    <li>On day 1, tap <b>Add 1,000 simulated steps</b> until you reach the goal, then <b>Clock in</b>. Let day 2 pass without clocking in. Clock in on day 3.</li>
-    <li>After six minutes, tap <b>Settle</b>. Two thirds of the stake come back and one third is burned. Every step shows up in <b>On-chain activity</b> with a Solana Explorer link.</li>
-  </ol>
-  <p class="note">Simulated steps are only available in demo pledges and are labelled as simulated. A real pledge uses the phone's hardware step counter and 24-hour days.</p>
+  <section id="judges">
+    <div class="over">For judges</div>
+    <h2>The whole thing in six minutes</h2>
+    <p class="sub">Demo pledges use 2-minute days, so a 3-day pledge lives its whole life while you watch.</p>
+    <ol class="steps">
+      <li><b>Install the APK</b> from the <a href="https://github.com/FannBe/PledgeX/releases/latest">latest release</a>. Tap <b>Use a demo wallet</b>, or <b>Connect wallet</b> with Phantom in Testnet Mode (Settings → Developer Settings).</li>
+      <li>Open <b>Judge Lab</b> in the header. Tap <b>Get devnet SOL</b> and <b>Get 10,000 test SKR</b>. The test SKR is minted by the program's own faucet.</li>
+      <li>Tap <b>Lock demo pledge</b>: 3,000 steps a day, 1,000 test SKR, three 2-minute days.</li>
+      <li>On day 1, walk or tap <b>+1,000 simulated steps</b> (demo only, labelled). Then tap <b>Clock in</b>. There is no wallet screen, because the session key signs.</li>
+      <li>Let day 2 pass, then clock in on day 3. After six minutes tap <b>Settle &amp; claim</b>: two thirds come back and one third burns. Check <b>Vault</b> and <b>Ranks</b>.</li>
+    </ol>
+    <p class="note">Also try the 6 AM Club in demo mode. A clock-in is accepted only in the first 40 seconds of each 2-minute day; after that the chain refuses it.</p>
+  </section>
 
-  <h2>On chain (Solana devnet)</h2>
-  <table>
-    <tr><td>Program</td><td><a href="https://explorer.solana.com/address/68c1eNdHAfNWJhCWhtqumiqzYyFcDNLkfgwKwdFwFRcd?cluster=devnet"><code>68c1eNdHAfNWJhCWhtqumiqzYyFcDNLkfgwKwdFwFRcd</code></a></td></tr>
-    <tr><td>Test SKR mint</td><td><a href="https://explorer.solana.com/address/F4L7W4qgFAuU2iyg5ePBENXTHeZyTPor4tJMfhUHqfgQ?cluster=devnet"><code>F4L7W4qgFAuU2iyg5ePBENXTHeZyTPor4tJMfhUHqfgQ</code></a></td></tr>
-    <tr><td>Mint authority</td><td>The program's faucet address <code>7Twns5ha3zR36upXJpSkUo6wsPRMS78byuJECimhkDHL</code>. No person holds a minting key.</td></tr>
-    <tr><td>Instructions</td><td><code>create_commitment</code>, <code>clock_in</code>, <code>settle</code>, <code>faucet</code></td></tr>
-    <tr><td>Accounts</td><td><code>Commitment</code>, its token vault, and one <code>Profile</code> per wallet (lifetime record, read by badges and ranks)</td></tr>
-    <tr><td>Day windows</td><td>Day <i>i</i> runs from <code>start + i × day_length</code> to the next day's start, measured in Solana time rather than the phone's clock. The program refuses a second clock-in for the same day, a clock-in by any other key, and settling early.</td></tr>
-  </table>
+  <section id="chain">
+    <div class="over">On chain</div>
+    <h2>What lives on Solana</h2>
+    <p class="sub">An Anchor 0.32 program on Solana devnet, upgraded in place. The end-to-end test passes 22/22 against the live program.</p>
+    <div class="flow">
+      <div class="node"><b style="color:var(--purple)">Wallet</b><span>Phantom / Solflare via MWA, or the demo key, signs <code>faucet</code> and <code>create_commitment</code></span></div>
+      <div class="node"><b style="color:var(--mint)">Escrow</b><span>The <code>Commitment</code> PDA and its token vault PDA hold the stake and the day bitmap</span></div>
+      <div class="node"><b style="color:var(--cyan)">Session key</b><span>An Ed25519 key on the phone (Keystore-sealed) signs <code>clock_in</code> and pays the settle fee</span></div>
+      <div class="node"><b style="color:var(--burn)">Settle</b><span>Refunds kept days, burns missed days with SPL <code>burn</code>, closes the accounts and updates the <code>Profile</code></span></div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <table>
+        <tr><th>Item</th><th>Value</th></tr>
+        <tr><td>Program</td><td><a href="https://explorer.solana.com/address/68c1eNdHAfNWJhCWhtqumiqzYyFcDNLkfgwKwdFwFRcd?cluster=devnet"><code>68c1eNdHAfNWJhCWhtqumiqzYyFcDNLkfgwKwdFwFRcd</code></a></td></tr>
+        <tr><td>Test SKR mint</td><td><a href="https://explorer.solana.com/address/F4L7W4qgFAuU2iyg5ePBENXTHeZyTPor4tJMfhUHqfgQ?cluster=devnet"><code>F4L7W4qgFAuU2iyg5ePBENXTHeZyTPor4tJMfhUHqfgQ</code></a> (9 decimals, no value)</td></tr>
+        <tr><td>Mint authority</td><td>the program's faucet PDA <code>7Twns5ha3zR36upXJpSkUo6wsPRMS78byuJECimhkDHL</code>; no person holds a minting key</td></tr>
+        <tr><td>Instructions</td><td><code>create_commitment</code> · <code>clock_in</code> · <code>settle</code> · <code>faucet</code></td></tr>
+        <tr><td>Accounts</td><td><code>Commitment [commitment, owner, id]</code> · vault <code>[vault, commitment]</code> · <code>Profile [profile, owner]</code> · faucet <code>[faucet]</code></td></tr>
+        <tr><td>Day windows</td><td>day <i>i</i> = <code>[start + i·day, start + (i+1)·day)</code> by the Clock sysvar; wake-up accepts only the first <code>window</code> seconds, screen detox only the last</td></tr>
+        <tr><td>Refused</td><td>steps below the goal · screen time over the limit · a second clock-in in one day · a clock-in outside the window · any other signer · settle before the end · faucet once you hold 5,000 SKR or more</td></tr>
+        <tr><td>Settle math</td><td>refund = stake × kept days ÷ days; burn = the exact remainder, so the vault always closes at zero</td></tr>
+      </table>
+    </div>
+  </section>
 
-  <h2>Honest limits</h2>
-  <div class="grid">
-    <div class="card"><b>The phone reports the steps</b><p>The program checks who clocks in, which day it is and that each day counts once. It cannot check the step count itself: that number comes from the phone.</p></div>
-    <div class="card"><b>Devnet and test tokens</b><p>PledgeX runs on Solana devnet. Test SKR has no value and is not the real SKR token.</p></div>
-  </div>
+  <section>
+    <div class="over">Trust</div>
+    <h2>Security and honest limits</h2>
+    <div class="two">
+      <div class="card hero-edge"><h3>What protects your stake</h3><p>The vault is a program account, so no team key can withdraw it. The session key can only call <code>clock_in</code>, settle pays only the owner, and burned tokens go to nobody. The upgrade authority is held offline, and the old development key that leaked had every authority removed before launch.</p></div>
+      <div class="card"><h3>What the program cannot check</h3><p>Steps and screen time are reported by the phone. The program checks who clocks in, when and how often, not the number itself. Only the 6 AM Club is verified entirely on chain. PledgeX runs on devnet with a test token that is not the real SKR.</p></div>
+    </div>
+  </section>
 
-  <footer>PledgeX · Solana devnet · <a href="https://github.com/FannBe/PledgeX">github.com/FannBe/PledgeX</a></footer>
+  <section>
+    <div class="over">Next</div>
+    <h2>Roadmap</h2>
+    <div class="grid">
+      <div class="card"><h3>Compressed NFT badges</h3><p>Badges are already on chain as the non-transferable <code>Profile</code> account. Next, each badge is minted as a soulbound Metaplex Bubblegum cNFT so it shows in any wallet.</p></div>
+      <div class="card"><h3>Health Connect &amp; wearables</h3><p>Read steps from Health Connect so watches and fitness bands count too.</p></div>
+      <div class="card"><h3>Mainnet with real SKR</h3><p>The same program on mainnet, with stakes in SKR and an optional stablecoin.</p></div>
+      <div class="card"><h3>Group pledges</h3><p>Friends or teams pledge together. Missed stakes still burn, so nobody gains from anyone else's miss.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="over">Stack</div>
+    <h2>Built with</h2>
+    <p class="sub">Rust + Anchor 0.32 · SPL Token · Kotlin + Jetpack Compose · Solana Mobile Wallet Adapter 2.2 · web3-solana · BouncyCastle Ed25519 + Android Keystore · Android step counter &amp; UsageStats · Helius devnet RPC · Node.js e2e tests · GitHub Actions · GitHub Pages</p>
+  </section>
+
+  <footer>PledgeX · Solana devnet · <a href="https://github.com/FannBe/PledgeX">github.com/FannBe/PledgeX</a> · MIT</footer>
 </main>
 </body>
 </html>

@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -65,7 +66,7 @@ import com.pledgex.app.chain.PledgeProgram
 import com.pledgex.app.formatSkr
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 
-enum class Tab(val label: String) { Active("Active"), Explore("Explore"), Ranks("Ranks"), Vault("Vault") }
+enum class Tab(val label: String, val glyph: Glyph) { Active("Active", Glyph.Bolt), Explore("Explore", Glyph.Compass), Ranks("Ranks", Glyph.Bars), Vault("Vault", Glyph.Shield) }
 
 /** Everything a screen can ask the app to do. */
 class Actions(
@@ -88,7 +89,7 @@ fun PledgeApp(vm: PledgeViewModel, sender: ActivityResultSender, askNotification
     var help by rememberSaveable { mutableStateOf(false) }
     val actions = Actions(vm, sender, { tab = it }, { judgeLab = true }, askNotifications)
 
-    Box(Modifier.fillMaxSize().background(Void)) {
+    Box(Modifier.fillMaxSize().cyberBackground()) {
         if (s.wallet == null) {
             Column(
                 Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState()),
@@ -161,7 +162,7 @@ private fun Header(s: UiState, onJudgeLab: () -> Unit, onHelp: () -> Unit, onDis
                     DropdownMenuItem(text = { Text("Disconnect", color = Burn) }, onClick = { onDisconnect(); menu = false })
                 }
             }
-            Pill("☰ Judge Lab", color = Cyan, onClick = onJudgeLab)
+            Pill("JUDGE LAB", color = Cyan, onClick = onJudgeLab)
         }
     }
 }
@@ -189,7 +190,8 @@ private fun DevnetStrip(s: UiState) {
 @Composable
 private fun BottomNav(current: Tab, onSelect: (Tab) -> Unit) {
     Row(
-        Modifier.fillMaxWidth().background(Surface1).border(1.dp, Hairline).navigationBarsPadding().padding(vertical = 8.dp),
+        Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(Color(0xFF0B0F1E), Color(0xFF05060B))))
+            .border(1.dp, NeonEdge, androidx.compose.ui.graphics.RectangleShape).navigationBarsPadding().padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
         Tab.entries.forEach { t ->
@@ -198,7 +200,7 @@ private fun BottomNav(current: Tab, onSelect: (Tab) -> Unit) {
                 Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).clickable { onSelect(t) }.padding(vertical = 6.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                TabIcon(t, if (on) Mint else TextLo, Modifier.size(24.dp))
+                FlatIcon(t.glyph, if (on) Mint else TextLo, Modifier.size(24.dp))
                 Spacer(Modifier.height(3.dp))
                 Text(t.label, color = if (on) Mint else TextLo, fontSize = 12.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.Normal)
             }
@@ -351,33 +353,17 @@ fun FundingCard(s: UiState, a: Actions) {
     }
 }
 
-/** Line icons drawn for the tab bar, so it keeps the Seeker look without an icon library. */
-@Composable
-private fun TabIcon(tab: Tab, color: Color, modifier: Modifier) {
-    androidx.compose.foundation.Canvas(modifier) {
-        val w = size.width
-        val h = size.height
-        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = w * 0.09f, cap = androidx.compose.ui.graphics.StrokeCap.Round,
-            join = androidx.compose.ui.graphics.StrokeJoin.Round)
-        fun path(vararg pts: Pair<Float, Float>, close: Boolean = true) = androidx.compose.ui.graphics.Path().apply {
-            moveTo(pts[0].first * w, pts[0].second * h)
-            pts.drop(1).forEach { lineTo(it.first * w, it.second * h) }
-            if (close) close()
-        }
-        when (tab) {
-            Tab.Active -> drawPath(path(0.58f to 0.05f, 0.2f to 0.56f, 0.48f to 0.56f, 0.4f to 0.95f, 0.8f to 0.42f, 0.52f to 0.42f), color)
-            Tab.Explore -> {
-                drawCircle(color, radius = w * 0.42f, style = stroke)
-                drawPath(path(0.68f to 0.32f, 0.56f to 0.56f, 0.32f to 0.68f, 0.44f to 0.44f), color)
-            }
-            Tab.Ranks -> {
-                val bw = w * 0.2f
-                listOf(0.12f to 0.55f, 0.4f to 0.2f, 0.68f to 0.4f).forEach { (x, top) ->
-                    drawRoundRect(color, androidx.compose.ui.geometry.Offset(x * w, top * h),
-                        androidx.compose.ui.geometry.Size(bw, (0.9f - top) * h), androidx.compose.ui.geometry.CornerRadius(w * 0.05f))
-                }
-            }
-            Tab.Vault -> drawPath(path(0.5f to 0.06f, 0.88f to 0.2f, 0.84f to 0.58f, 0.5f to 0.95f, 0.16f to 0.58f, 0.12f to 0.2f), color, style = stroke)
-        }
-    }
+/** The cyber backdrop: obsidian black, a purple and a mint glow, and a faint neon grid. */
+fun Modifier.cyberBackground() = this.drawBehind {
+    drawRect(Void)
+    drawRect(androidx.compose.ui.graphics.Brush.radialGradient(listOf(Purple.copy(alpha = 0.22f), Color.Transparent),
+        center = androidx.compose.ui.geometry.Offset(0f, 0f), radius = size.maxDimension * 0.6f))
+    drawRect(androidx.compose.ui.graphics.Brush.radialGradient(listOf(Mint.copy(alpha = 0.12f), Color.Transparent),
+        center = androidx.compose.ui.geometry.Offset(size.width, size.height), radius = size.maxDimension * 0.6f))
+    val step = 36.dp.toPx()
+    val grid = Cyan.copy(alpha = 0.035f)
+    var x = 0f
+    while (x < size.width) { drawLine(grid, androidx.compose.ui.geometry.Offset(x, 0f), androidx.compose.ui.geometry.Offset(x, size.height)); x += step }
+    var y = 0f
+    while (y < size.height) { drawLine(grid, androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(size.width, y)); y += step }
 }
