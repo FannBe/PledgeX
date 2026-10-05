@@ -41,6 +41,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
@@ -122,7 +123,18 @@ fun PledgeApp(vm: PledgeViewModel, sender: ActivityResultSender, askNotification
                 BottomNav(tab) { tab = it; if (it == Tab.Ranks) vm.loadRanks() }
             }
         }
-        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp))
+        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp)) { data ->
+        Row(
+            Modifier.padding(horizontal = 16.dp).widthIn(max = 640.dp).fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp)).background(Brush.horizontalGradient(listOf(Color(0xFF0E2A22), Color(0xFF14102A))))
+                .border(1.5.dp, SolanaGradient, RoundedCornerShape(16.dp)).padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            FlatIcon(Glyph.Check, Mint, Modifier.size(20.dp))
+            Spacer(Modifier.width(10.dp))
+            Text(data.visuals.message, color = TextHi, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+        }
+    }
     }
     if (judgeLab && s.wallet != null) JudgeLab(s, actions) { judgeLab = false }
     if (help) HowItWorks { help = false }
@@ -262,8 +274,21 @@ private fun Welcome(s: UiState, vm: PledgeViewModel, sender: ActivityResultSende
 private fun JudgeLab(s: UiState, a: Actions, onClose: () -> Unit) {
     val vm = a.vm
     val c = s.commitment
-    val history = s.history.map { it.kind }
-    ModalBottomSheet(onDismissRequest = onClose, containerColor = Surface1) {
+    val r = s.lastResult
+    // Each step is read from the current pledge (or the one just settled), never from
+    // older history, and a step only counts once every step before it does.
+    val raw = listOf(
+        (s.lamports ?: 0) >= 5_000_000 || c != null,
+        (s.skr ?: 0) >= 1_000 * PledgeProgram.UNIT || c != null,
+        c != null || r != null,
+        // A day clocked in, or a pledge already over (then only settling is left).
+        c?.let { it.completedDays > 0 || s.chainNow >= it.end } ?: (r != null),
+        c == null && r != null,
+    )
+    val done = raw.runningReduce { prev, cur -> prev && cur }
+    val current = done.indexOfFirst { !it }
+    val sheet = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(onDismissRequest = onClose, sheetState = sheet, containerColor = Surface1) {
         Column(
             Modifier.padding(horizontal = 20.dp).padding(bottom = 28.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -272,21 +297,26 @@ private fun JudgeLab(s: UiState, a: Actions, onClose: () -> Unit) {
                 Heading("Judge Lab", 22); Spacer(Modifier.weight(1f)); Tag("REAL DEVNET TXS", Mint)
             }
             Body("The whole life of a pledge in about six minutes: demo pledges use 2-minute days. Nothing here is simulated except the steps you add, which are labelled.")
-            LabStep(1, "Fund the wallet", (s.lamports ?: 0) >= 5_000_000 || c != null, "Devnet SOL for fees and deposits") {
-                GhostButton("Get devnet SOL", busy = "airdrop" in s.pending || "sponsor" in s.pending) { vm.airdrop() }
+            LabStep(1, "Fund the wallet", done[0], current == 0, "Devnet SOL for fees and deposits") {
+                GradientButton("Get devnet SOL", busy = "airdrop" in s.pending || "sponsor" in s.pending) { vm.airdrop() }
             }
-            LabStep(2, "Get test SKR", (s.skr ?: 0) >= 1_000 * PledgeProgram.UNIT || c != null, "Minted by the program's own faucet") {
-                GhostButton("Get 10,000 test SKR", busy = "faucet" in s.pending) { vm.getTestSkr(a.sender) }
+            LabStep(2, "Get test SKR", done[1], current == 1, "Minted by the program's own faucet") {
+                GradientButton("Get 10,000 test SKR", busy = "faucet" in s.pending) { vm.getTestSkr(a.sender) }
             }
-            LabStep(3, "Lock a 3-day demo pledge", c != null || "Settle" in history, "3,000 steps a day, 1,000 test SKR, 2-minute days") {
-                GradientButton("Lock demo pledge", busy = "create" in s.pending, enabled = c == null) {
-                    a.create(HabitSpec("Demo · 3K steps", Kind.STEPS, 3_000, 3, 1_000, demo = true)); onClose()
+            LabStep(3, "Lock a 3-day demo pledge", done[2], current == 2, "3,000 steps a day, 1,000 test SKR, 2-minute days") {
+                GradientButton("Lock demo pledge", busy = "create" in s.pending) {
+                    vm.dismissResult(); a.create(HabitSpec("Demo · 3K steps", Kind.STEPS, 3_000, 3, 1_000, demo = true)); onClose()
                 }
             }
-            LabStep(4, "Clock in day 1", "Clock-in" in history, "Add simulated steps on the Active tab, then Clock in. No wallet screen: the phone's session key signs.") {
-                GhostButton("Go to Active") { a.goTo(Tab.Active); onClose() }
+            LabStep(4, "Clock in day 1", done[3], current == 3, "Walk, or add simulated steps on the Active tab, then Clock in. No wallet screen: the phone's session key signs.") {
+                GradientButton("Go to Active") { a.goTo(Tab.Active); onClose() }
             }
-            LabStep(5, "Miss day 2, keep day 3, settle", "Settle" in history, "After six minutes, Settle: kept days come back, missed days burn. Check the Vault and Ranks tabs.") {}
+            LabStep(5, "Miss day 2, keep day 3, settle", done[4], current == 4, "After six minutes, Settle: kept days come back, missed days burn. Then check Vault and Ranks.") {
+                GradientButton("Go to Active") { a.goTo(Tab.Active); onClose() }
+            }
+            if (current == -1) GhostButton("Start over with a new demo pledge", color = Mint) {
+                vm.dismissResult(); a.create(HabitSpec("Demo · 3K steps", Kind.STEPS, 3_000, 3, 1_000, demo = true)); onClose()
+            }
             Body("Also try the 6 AM Club in demo: clock-in is accepted only in the first 40 s of each 2-minute day, and Solana's clock decides.", TextLo, 13)
             GhostButton("Lock a demo 6 AM Club pledge", enabled = c == null, color = Gold) {
                 a.create(HabitSpec("Demo · 6 AM Club", Kind.WAKE, 0, 3, 1_000, demo = true)); onClose()
@@ -296,8 +326,16 @@ private fun JudgeLab(s: UiState, a: Actions, onClose: () -> Unit) {
 }
 
 @Composable
-private fun LabStep(n: Int, title: String, done: Boolean, detail: String, action: @Composable () -> Unit) {
-    GlassCard(glow = if (done) Brush.horizontalGradient(listOf(Mint.copy(alpha = 0.6f), Mint.copy(alpha = 0.2f))) else null, padding = 14.dp) {
+private fun LabStep(n: Int, title: String, done: Boolean, current: Boolean, detail: String, action: @Composable () -> Unit) {
+    GlassCard(
+        Modifier.alpha(if (done || current) 1f else 0.45f),
+        glow = when {
+            done -> Brush.horizontalGradient(listOf(Mint.copy(alpha = 0.6f), Mint.copy(alpha = 0.2f)))
+            current -> SolanaGradient
+            else -> null
+        },
+        padding = 14.dp,
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier.size(28.dp).clip(CircleShape).background(if (done) Mint else CardHigh),
@@ -309,7 +347,7 @@ private fun LabStep(n: Int, title: String, done: Boolean, detail: String, action
                 Text(detail, color = TextLo, fontSize = 12.sp)
             }
         }
-        if (!done) action()
+        if (current) action()
     }
 }
 

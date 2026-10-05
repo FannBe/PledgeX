@@ -430,7 +430,8 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
             Kind.SCREEN -> if (s.todaySteps > c.targetSteps) return@launch fail("${s.todaySteps} min of screen time is over your ${c.targetSteps} min limit.")
         }
         val stepsReported = if (c.kind == Kind.WAKE) 0 else s.todaySteps.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-        val sig = if (c.clockInAuthority == session.address && (s.sessionLamports ?: 0) >= SESSION_FEE_RESERVE) {
+        val sessionBalance = runCatching { rpc.lamports(session.address) }.getOrNull() ?: s.sessionLamports ?: 0
+        val sig = if (c.clockInAuthority == session.address && sessionBalance >= SESSION_FEE_RESERVE) {
             // No wallet screen: the device key the program accepts for clock-in signs alone.
             submitLocal("clockin", session, listOf(session)) {
                 listOf(PledgeProgram.clockIn(session.publicKey, SolanaPublicKey.from(c.address), day, stepsReported))
@@ -457,7 +458,9 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
         val commitment = SolanaPublicKey.from(c.address)
         // Anyone may settle and the refund only goes to the owner, so the device key
         // can pay the fee and spare the wallet screen.
-        val sig = if ((s.sessionLamports ?: 0) >= SESSION_FEE_RESERVE) {
+        // Read now, not from the last poll: a stale zero sent this to the wallet screen.
+        val sessionBalance = runCatching { rpc.lamports(session.address) }.getOrNull() ?: s.sessionLamports ?: 0
+        val sig = if (sessionBalance >= SESSION_FEE_RESERVE) {
             submitLocal("settle", session, listOf(session)) { listOf(PledgeProgram.settle(session.publicKey, owner, commitment)) }
         } else {
             val me = ownerKey() ?: return@launch
