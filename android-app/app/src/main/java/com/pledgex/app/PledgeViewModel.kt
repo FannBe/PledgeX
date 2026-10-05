@@ -8,12 +8,15 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.funkatronics.encoders.Base58
 import com.pledgex.app.chain.Commitment
+import com.pledgex.app.chain.Kind
+import com.pledgex.app.chain.Profile
 import com.pledgex.app.chain.LocalKey
 import com.pledgex.app.chain.MessageCompiler
 import com.pledgex.app.chain.PledgeError
 import com.pledgex.app.chain.PledgeProgram
 import com.pledgex.app.chain.SolanaRpc
 import com.pledgex.app.chain.signLocally
+import com.pledgex.app.steps.ScreenTime
 import com.pledgex.app.steps.StepCounter
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.ConnectionIdentity
@@ -24,6 +27,8 @@ import com.solana.publickey.SolanaPublicKey
 import com.solana.transaction.Transaction
 import com.solana.transaction.TransactionInstruction
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,6 +44,20 @@ data class TxRecord(val kind: String, val signature: String, val time: Long, val
 
 data class SettleResult(val refund: Long, val burn: Long, val completed: Int, val total: Int, val signature: String)
 
+/** One line of the Ranks tab's live feed: a recent program transaction. */
+data class Activity(val wallet: String, val action: String, val time: Long, val signature: String)
+
+/** Everything on the Ranks tab, read from the chain. */
+data class Ranks(
+    val profiles: List<Profile>,
+    val activeStaked: Long,
+    val activePledges: Int,
+    val totalBurned: Long,
+    val successRate: Double?,
+    val activity: List<Activity>,
+    val loadedAt: Long,
+)
+
 data class UiState(
     val wallet: String? = null,
     val walletKind: WalletKind? = null,
@@ -51,6 +70,7 @@ data class UiState(
     val loaded: Boolean = false,
     /** Chain unix time, ticking every second from the last measured offset. */
     val chainNow: Long = System.currentTimeMillis() / 1000,
+    /** Today's value for the pledge's kind: steps, or screen minutes. */
     val todaySteps: Long = 0,
     val demoStepsToday: Long = 0,
     val hasStepSensor: Boolean = false,
@@ -60,6 +80,10 @@ data class UiState(
     val error: String? = null,
     val history: List<TxRecord> = emptyList(),
     val lastResult: SettleResult? = null,
+    val profile: Profile? = null,
+    val slot: Long? = null,
+    val screenAccess: Boolean = false,
+    val ranks: Ranks? = null,
 ) {
     val lowSol get() = lamports != null && lamports < MIN_SOL_TO_PLEDGE
     val busy get() = pending.isNotEmpty()
@@ -81,6 +105,7 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
     private val prefs = app.getSharedPreferences("session", Context.MODE_PRIVATE)
     private val session = LocalKey.load(app, "session")
     private val steps = StepCounter(app)
+    private val screen = ScreenTime(app)
     private val mwa = MobileWalletAdapter(
         connectionIdentity = ConnectionIdentity(
             // Our own page; the identity icon MUST be relative to it, or the
@@ -153,15 +178,83 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
         clockOffset = chain - System.currentTimeMillis() / 1000
         prefs.edit().putLong("clockOffset", clockOffset).apply()
         val sessionLamports = rpc.lamports(session.address)
-        _state.update { it.copy(chainNow = chain, sessionLamports = sessionLamports) }
+        val slot = runCatching { rpc.slot() }.getOrNull()
+        _state.update { it.copy(chainNow = chain, sessionLamports = sessionLamports, slot = slot ?: it.slot, screenAccess = screen.hasAccess()) }
 
         val wallet = _state.value.wallet ?: return
         val owner = SolanaPublicKey.from(wallet)
         val lamports = rpc.lamports(wallet)
         val skr = rpc.tokenBalance(PledgeProgram.tokenAccount(owner).base58()) ?: 0
         val commitment = findCommitment(wallet)
+        val profileAddress = PledgeProgram.profile(owner).base58()
+        val profile = rpc.accountData(profileAddress)?.let { runCatching { Profile.decode(profileAddress, it) }.getOrNull() }
         if (_state.value.wallet != wallet) return // switched while reading
-        _state.update { it.copy(lamports = lamports, skr = skr, commitment = commitment, loaded = true) }
+        _state.update { it.copy(lamports = lamports, skr = skr, commitment = commitment, profile = profile, loaded = true) }
+        scheduleReminder(commitment, chain)
+    }
+
+    /** A notification for today's window (real-day pledges): when it opens for wake-up, an hour before it closes otherwise. */
+    private fun scheduleReminder(c: Commitment?, now: Long) {
+        val app = getApplication<Application>()
+        if (c == null || c.isDemo || now >= c.end) return Reminders.cancel(app)
+        val day = c.dayAt(now)
+        val target = if (c.clockedIn(day) || now >= c.openUntil(day)) day + 1 else day
+        if (target >= c.totalDays) return Reminders.cancel(app)
+        val atChain = if (c.kind == Kind.WAKE) c.openFrom(target) else c.openUntil(target) - 3600
+        val text = when (c.kind) {
+            Kind.WAKE -> "Good morning! Clock in before 06:00 to keep day ${target + 1}."
+            Kind.SCREEN -> "Your clock-in window is open until midnight. Keep screen time under ${c.targetSteps} min."
+            else -> "One hour left to reach ${c.targetSteps.fmt()} steps and clock in day ${target + 1}."
+        }
+        Reminders.schedule(app, (atChain - clockOffset) * 1000, "PledgeX · ${formatSkr(c.dailyStake)} SKR at stake", text)
+    }
+
+    /** The Ranks tab: every profile and open pledge on the program, and its latest transactions. */
+    fun loadRanks(force: Boolean = false) = viewModelScope.launch {
+        val cached = _state.value.ranks
+        if (!force && cached != null && System.currentTimeMillis() - cached.loadedAt < 30_000) return@launch
+        if ("ranks" in _state.value.pending) return@launch
+        _state.update { it.copy(pending = it.pending + "ranks") }
+        try {
+            val program = PledgeProgram.PROGRAM_ID.base58()
+            val profiles = rpc.programAccounts(program, PledgeProgram.PROFILE_LEN)
+                .mapNotNull { (a, d) -> runCatching { Profile.decode(a, d) }.getOrNull() }
+                .sortedWith(compareByDescending<Profile> { it.kept }.thenByDescending { it.perfect }.thenBy { it.missed })
+            val open = rpc.programAccounts(program, PledgeProgram.COMMITMENT_LEN)
+                .mapNotNull { (a, d) -> runCatching { Commitment.decode(a, d) }.getOrNull() }.filter { !it.settled }
+            val kept = profiles.sumOf { it.kept }
+            val missed = profiles.sumOf { it.missed }
+            // One getTransaction per line, all at once: sequential reads took ten seconds.
+            val logs = kotlinx.coroutines.coroutineScope {
+                rpc.signatures(program, 12).map { (sig, time) ->
+                    async { Triple(sig, time, runCatching { rpc.transactionLogs(sig) }.getOrNull()) }
+                }.awaitAll()
+            }
+            val activity = logs.mapNotNull { (sig, time, tx) ->
+                val (payer, logs) = tx ?: return@mapNotNull null
+                val ix = logs.firstOrNull { it.startsWith("Program log: Instruction: ") }?.removePrefix("Program log: Instruction: ")
+                val action = when (ix) {
+                    "ClockIn" -> "clocked in a day"
+                    "CreateCommitment" -> "locked a new pledge"
+                    "Settle" -> "settled a pledge"
+                    "Faucet" -> "claimed test SKR"
+                    else -> return@mapNotNull null
+                }
+                Activity(payer, action, time, sig)
+            }
+            _state.update {
+                it.copy(
+                    ranks = Ranks(
+                        profiles, open.sumOf { c -> c.totalAmount }, open.size, profiles.sumOf { p -> p.burned },
+                        if (kept + missed == 0) null else kept.toDouble() / (kept + missed), activity, System.currentTimeMillis(),
+                    ),
+                )
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "ranks", e)
+            _state.update { it.copy(error = friendly(e)) }
+        }
+        _state.update { it.copy(pending = it.pending - "ranks") }
     }
 
     /** The wallet's open pledge: the remembered address, else a search of the program's accounts. */
@@ -185,9 +278,23 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
         val s = _state.value
         val c = s.commitment ?: return _state.update { it.copy(todaySteps = 0, demoStepsToday = 0) }
         val day = c.dayAt(s.chainNow)
-        val total = steps.stepsFor(c.address, day, steps.reading.value)
-        _state.update { it.copy(todaySteps = total, demoStepsToday = steps.demoSteps(c.address, day)) }
+        when (c.kind) {
+            Kind.STEPS -> {
+                val total = steps.stepsFor(c.address, day, steps.reading.value)
+                _state.update { it.copy(todaySteps = total, demoStepsToday = steps.demoSteps(c.address, day)) }
+            }
+            Kind.SCREEN -> {
+                // Read about twice a minute: the query walks the day's usage events.
+                if (s.chainNow % 30 != 0L && s.todaySteps != 0L) return
+                val fromMs = (c.dayStart(day) - clockOffset) * 1000
+                val minutes = if (c.started(s.chainNow)) screen.minutes(fromMs, System.currentTimeMillis()) else 0
+                _state.update { it.copy(todaySteps = minutes, demoStepsToday = 0, screenAccess = screen.hasAccess()) }
+            }
+            else -> _state.update { it.copy(todaySteps = 0, demoStepsToday = 0) }
+        }
     }
+
+    fun screenAccessIntent() = screen.accessIntent()
 
     // ---- wallet ------------------------------------------------------------------------
 
@@ -283,37 +390,46 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
         done("10,000 test SKR added.")
     }
 
-    fun createPledge(sender: ActivityResultSender, targetSteps: Int, totalDays: Int, demo: Boolean, stakeWhole: Long) =
-        viewModelScope.launch {
-            val s = _state.value
-            val owner = ownerKey() ?: return@launch
-            val amount = stakeWhole * PledgeProgram.UNIT
-            if ((s.lamports ?: 0) < MIN_SOL_TO_PLEDGE) return@launch fail("You need about 0.01 devnet SOL for the fees. Tap \"Get devnet SOL\" first.")
-            if ((s.skr ?: 0) < amount) return@launch fail("Not enough test SKR for this stake. Tap \"Get test SKR\" first.")
-            val id = System.currentTimeMillis()
-            val daySec = if (demo) DEMO_DAY_SEC else PledgeProgram.REAL_DAY_SEC
-            val sig = submitAsOwner(sender, "create") {
-                buildList {
-                    add(PledgeProgram.createCommitment(owner, session.publicKey, id, targetSteps, totalDays, daySec, amount))
-                    // The session key pays its own clock-in fees; top it up with the stake.
-                    if ((rpc.lamports(session.address)) < SESSION_MIN) {
-                        add(PledgeProgram.transferSol(owner, session.publicKey, SESSION_FLOAT))
-                    }
+    fun createPledge(sender: ActivityResultSender, spec: HabitSpec) = viewModelScope.launch {
+        val s = _state.value
+        val owner = ownerKey() ?: return@launch
+        val amount = spec.stake * PledgeProgram.UNIT
+        if (s.commitment != null) return@launch fail("Finish your current pledge first: one at a time.")
+        if ((s.lamports ?: 0) < MIN_SOL_TO_PLEDGE) return@launch fail("You need about 0.01 devnet SOL for the deposits and fees. Tap \"Get devnet SOL\" first.")
+        if ((s.skr ?: 0) < amount) return@launch fail("Not enough test SKR for this stake. Tap \"Get test SKR\" first.")
+        val id = System.currentTimeMillis()
+        val startAt = spec.startAt(clockOffset)
+        val sig = submitAsOwner(sender, "create") {
+            buildList {
+                add(
+                    PledgeProgram.createCommitment(
+                        owner, session.publicKey, id, spec.target, spec.days, spec.daySec, amount, spec.kind, startAt, spec.windowSec,
+                    ),
+                )
+                // The session key pays its own clock-in fees; top it up with the stake.
+                if ((rpc.lamports(session.address)) < SESSION_MIN) {
+                    add(PledgeProgram.transferSol(owner, session.publicKey, SESSION_FLOAT))
                 }
-            } ?: return@launch
-            prefs.edit().putString("commitment_${owner.base58()}", PledgeProgram.commitment(owner, id).base58()).apply()
-            record("Pledge", sig, "Staked ${formatSkr(amount)} test SKR · $totalDays days × ${targetSteps.fmt()} steps")
-            _state.update { it.copy(lastResult = null) }
-            done("Pledge locked on chain. Day 1 starts now.")
-        }
+            }
+        } ?: return@launch
+        prefs.edit().putString("commitment_${owner.base58()}", PledgeProgram.commitment(owner, id).base58()).apply()
+        record("Pledge", sig, "${spec.title} · staked ${formatSkr(amount)} test SKR · ${spec.days} days")
+        _state.update { it.copy(lastResult = null) }
+        val starts = java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT).format(java.util.Date((startAt - clockOffset) * 1000))
+        done(if (startAt == 0L) "Pledge locked on chain. Day 1 starts now." else "Pledge locked on chain. Day 1 starts at $starts.")
+    }
 
     fun clockIn(sender: ActivityResultSender) = viewModelScope.launch {
         val s = _state.value
         val c = s.commitment ?: return@launch
         val day = c.dayAt(s.chainNow)
-        if (day >= c.totalDays || c.clockedIn(day)) return@launch
-        if (s.todaySteps < c.targetSteps) return@launch fail("${s.todaySteps.fmt()} of ${c.targetSteps.fmt()} steps so far — keep walking.")
-        val stepsReported = s.todaySteps.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        if (!c.started(s.chainNow) || day >= c.totalDays || c.clockedIn(day)) return@launch
+        if (s.chainNow < c.openFrom(day) || s.chainNow >= c.openUntil(day)) return@launch fail("Today's clock-in window is closed.")
+        when (c.kind) {
+            Kind.STEPS -> if (s.todaySteps < c.targetSteps) return@launch fail("${s.todaySteps.fmt()} of ${c.targetSteps.fmt()} steps so far: keep walking.")
+            Kind.SCREEN -> if (s.todaySteps > c.targetSteps) return@launch fail("${s.todaySteps} min of screen time is over your ${c.targetSteps} min limit.")
+        }
+        val stepsReported = if (c.kind == Kind.WAKE) 0 else s.todaySteps.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
         val sig = if (c.clockInAuthority == session.address && (s.sessionLamports ?: 0) >= SESSION_FEE_RESERVE) {
             // No wallet screen: the device key the program accepts for clock-in signs alone.
             submitLocal("clockin", session, listOf(session)) {
@@ -325,7 +441,12 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
                 listOf(PledgeProgram.clockIn(owner, SolanaPublicKey.from(c.address), day, stepsReported))
             }
         } ?: return@launch
-        record("Clock-in", sig, "Day ${day + 1} of ${c.totalDays} · ${stepsReported.toLong().fmt()} steps")
+        val what = when (c.kind) {
+            Kind.WAKE -> "up in time"
+            Kind.SCREEN -> "$stepsReported min of screen time"
+            else -> "${stepsReported.toLong().fmt()} steps"
+        }
+        record("Clock-in", sig, "Day ${day + 1} of ${c.totalDays} · $what")
         done("Day ${day + 1} recorded on chain.")
     }
 
@@ -353,7 +474,7 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
     fun addDemoSteps(amount: Long) {
         val s = _state.value
         val c = s.commitment ?: return
-        if (!c.isDemo) return
+        if (!c.isDemo || c.kind != Kind.STEPS) return
         steps.addDemoSteps(c.address, c.dayAt(s.chainNow), amount)
         recomputeSteps()
     }

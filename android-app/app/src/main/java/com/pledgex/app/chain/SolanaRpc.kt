@@ -117,6 +117,49 @@ class SolanaRpc(private val url: String) {
         }
     }
 
+    /** Every account of `program` with `dataSize` bytes. */
+    suspend fun programAccounts(program: String, dataSize: Int): List<Pair<String, ByteArray>> {
+        val result = call("getProgramAccounts", buildJsonArray {
+            add(program)
+            add(buildJsonObject {
+                put("encoding", "base64")
+                put("commitment", "confirmed")
+                put("filters", buildJsonArray { add(buildJsonObject { put("dataSize", dataSize) }) })
+            })
+        })
+        return result.jsonArray.mapNotNull { entry ->
+            val address = entry.jsonObject["pubkey"]?.jsonPrimitive?.content ?: return@mapNotNull null
+            val data = decode(entry.jsonObject["account"] ?: JsonNull) ?: return@mapNotNull null
+            address to data
+        }
+    }
+
+    suspend fun slot(): Long = call("getSlot", buildJsonArray { add(buildJsonObject { put("commitment", "confirmed") }) }).jsonPrimitive.long
+
+    /** The newest signatures that touched `address`. */
+    suspend fun signatures(address: String, limit: Int): List<Pair<String, Long>> {
+        val result = call("getSignaturesForAddress", buildJsonArray {
+            add(address); add(buildJsonObject { put("limit", limit); put("commitment", "confirmed") })
+        })
+        return result.jsonArray.mapNotNull { e ->
+            val o = e.jsonObject
+            if (o["err"] != null && o["err"] !is JsonNull) return@mapNotNull null
+            o["signature"]!!.jsonPrimitive.content to (o["blockTime"]?.jsonPrimitive?.content?.toLongOrNull() ?: 0)
+        }
+    }
+
+    /** A landed transaction's fee payer and log lines, or null if the node no longer has it. */
+    suspend fun transactionLogs(signature: String): Pair<String, List<String>>? {
+        val result = call("getTransaction", buildJsonArray {
+            add(signature)
+            add(buildJsonObject { put("encoding", "json"); put("commitment", "confirmed"); put("maxSupportedTransactionVersion", 0) })
+        })
+        if (result is JsonNull) return null
+        val payer = result.jsonObject["transaction"]!!.jsonObject["message"]!!.jsonObject["accountKeys"]!!.jsonArray[0].jsonPrimitive.content
+        val logs = result.jsonObject["meta"]?.jsonObject?.get("logMessages")?.jsonArray?.map { it.jsonPrimitive.content }.orEmpty()
+        return payer to logs
+    }
+
     /** Accounts of `program` with `dataSize` bytes whose bytes at `offset` equal `bytesBase58`. */
     suspend fun programAccounts(program: String, dataSize: Int, offset: Int, bytesBase58: String): List<Pair<String, ByteArray>> {
         val result = call("getProgramAccounts", buildJsonArray {

@@ -26,6 +26,8 @@ object PledgeProgram {
     const val UNIT = 1_000_000_000L
     /** Commitment account size (state.rs Commitment::LEN). */
     const val COMMITMENT_LEN = 209
+    /** Profile account size (state.rs Profile::LEN). */
+    const val PROFILE_LEN = 119
     /** A wallet below this holds too little test SKR and may use the faucet. */
     const val FAUCET_CAP = 5_000 * UNIT
     const val FAUCET_AMOUNT = 10_000 * UNIT
@@ -46,6 +48,7 @@ object PledgeProgram {
         pda("commitment".toByteArray(), owner.bytes, le(8) { putLong(id) })
     suspend fun vault(commitment: SolanaPublicKey) = pda("vault".toByteArray(), commitment.bytes)
     suspend fun faucetAuthority() = pda("faucet".toByteArray())
+    suspend fun profile(owner: SolanaPublicKey) = pda("profile".toByteArray(), owner.bytes)
 
     suspend fun tokenAccount(owner: SolanaPublicKey): SolanaPublicKey =
         ProgramDerivedAddress.find(listOf(owner.bytes, TOKEN_PROGRAM.bytes, SKR_MINT.bytes), ASSOCIATED_TOKEN_PROGRAM).getOrThrow()
@@ -87,16 +90,20 @@ object PledgeProgram {
         totalDays: Int,
         daySec: Long,
         amount: Long,
+        kind: Int = Kind.STEPS,
+        startAt: Long = 0,
+        windowSec: Int = 0,
     ): TransactionInstruction {
         val commitment = commitment(owner, id)
         return TransactionInstruction(
             PROGRAM_ID,
             listOf(
-                w(owner, true), r(session ?: SYSTEM_PROGRAM), w(commitment), w(vault(commitment)),
+                w(owner, true), r(session ?: SYSTEM_PROGRAM), w(commitment), w(vault(commitment)), w(profile(owner)),
                 w(tokenAccount(owner)), r(SKR_MINT), r(TOKEN_PROGRAM), r(SYSTEM_PROGRAM), r(RENT_SYSVAR),
             ),
-            discriminator("global", "create_commitment") + le(8 + 4 + 1 + 8 + 8) {
+            discriminator("global", "create_commitment") + le(8 + 4 + 1 + 8 + 8 + 1 + 8 + 4) {
                 putLong(id); putInt(targetSteps); put(totalDays.toByte()); putLong(daySec); putLong(amount)
+                put(kind.toByte()); putLong(startAt); putInt(windowSec)
             },
         )
     }
@@ -110,11 +117,20 @@ object PledgeProgram {
     suspend fun settle(caller: SolanaPublicKey, owner: SolanaPublicKey, commitment: SolanaPublicKey) = TransactionInstruction(
         PROGRAM_ID,
         listOf(
-            r(caller, true), w(owner), w(commitment), w(vault(commitment)),
-            w(tokenAccount(owner)), w(SKR_MINT), r(TOKEN_PROGRAM),
+            w(caller, true), w(owner), w(commitment), w(vault(commitment)),
+            w(tokenAccount(owner)), w(SKR_MINT), w(profile(owner)), r(TOKEN_PROGRAM), r(SYSTEM_PROGRAM),
         ),
         discriminator("global", "settle"),
     )
+}
+
+/** What a pledge measures (state.rs `kind`). */
+object Kind {
+    const val STEPS = 0
+    /** Screen minutes, a ceiling, clocked in during the last `window` seconds of the day. */
+    const val SCREEN = 1
+    /** Wake-up, clocked in during the first `window` seconds of the day; chain time decides. */
+    const val WAKE = 2
 }
 
 /** The Commitment account, decoded. Times are chain unix seconds. */
@@ -131,7 +147,13 @@ data class Commitment(
     val settled: Boolean,
     val bitmap: Long,
     val id: Long,
+    val kind: Int,
+    val windowSec: Int,
 ) {
+    fun started(now: Long) = now >= start
+    /** The part of `day` in which the chain accepts a clock-in. */
+    fun openFrom(day: Int) = if (kind == Kind.SCREEN && windowSec > 0) dayEnd(day) - windowSec else dayStart(day)
+    fun openUntil(day: Int) = if (kind == Kind.WAKE && windowSec > 0) dayStart(day) + windowSec else dayEnd(day)
     val end get() = start + totalDays * daySec
     val isDemo get() = daySec < PledgeProgram.REAL_DAY_SEC
     /** The day index at chain time `now`; equals totalDays once the pledge has ended. */
@@ -163,7 +185,41 @@ data class Commitment(
             val bitmap = b.long
             b.get(); b.get() // bumps
             val id = b.long
-            return Commitment(address, authority, clockIn, target, totalDays, completed, daySec, start, total, settled, bitmap, id)
+            val kind = b.get().toInt() and 0xff
+            val window = b.int
+            return Commitment(address, authority, clockIn, target, totalDays, completed, daySec, start, total, settled, bitmap, id, kind, window)
+        }
+    }
+}
+
+/** A wallet's lifetime record (state.rs Profile): non-transferable, read by badges and ranks. */
+data class Profile(
+    val address: String,
+    val authority: String,
+    val started: Int,
+    val settled: Int,
+    val perfect: Int,
+    val kept: Int,
+    val missed: Int,
+    val staked: Long,
+    val returned: Long,
+    val burned: Long,
+    val bestStreak: Int,
+    val perfectKinds: Int,
+) {
+    val successRate get() = if (kept + missed == 0) null else kept.toDouble() / (kept + missed)
+    fun perfectIn(kind: Int) = (perfectKinds shr kind) and 1 == 1
+
+    companion object {
+        fun decode(address: String, data: ByteArray): Profile {
+            val b = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
+            val disc = ByteArray(8).also { b.get(it) }
+            require(disc.contentEquals(PledgeProgram.discriminator("account", "Profile"))) { "not a Profile" }
+            val authority = SolanaPublicKey(ByteArray(32).also { b.get(it) }).base58()
+            return Profile(
+                address, authority, b.int, b.int, b.int, b.int, b.int, b.long, b.long, b.long,
+                b.get().toInt() and 0xff, b.get().toInt() and 0xff,
+            )
         }
     }
 }
@@ -184,7 +240,10 @@ enum class PledgeError(val userMessage: String) {
     MathOverflow("The amount is too large."),
     InvalidAmount("The stake must be more than zero."),
     InvalidTarget("The step target must be more than zero."),
-    FaucetBalanceTooHigh("You already hold 5,000 test SKR or more; the faucet refills below that.");
+    FaucetBalanceTooHigh("You already hold 5,000 test SKR or more; the faucet refills below that."),
+    InvalidKind("Unknown habit kind."),
+    InvalidSchedule("That start time or window is not allowed."),
+    LimitExceeded("Today's screen time is over your limit, so this day cannot be clocked in.");
 
     companion object {
         private const val FIRST_CODE = 6000

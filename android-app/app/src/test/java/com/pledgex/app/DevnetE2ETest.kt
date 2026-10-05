@@ -1,6 +1,8 @@
 package com.pledgex.app
 
 import com.pledgex.app.chain.Commitment
+import com.pledgex.app.chain.Kind
+import com.pledgex.app.chain.Profile
 import com.pledgex.app.chain.LocalKey
 import com.pledgex.app.chain.PledgeProgram
 import com.pledgex.app.chain.signLocally
@@ -106,7 +108,8 @@ class DevnetE2ETest {
         val id = System.currentTimeMillis()
         val stake = 3_000 * PledgeProgram.UNIT
         println("create " + send(owner, listOf(owner), listOf(
-            PledgeProgram.createCommitment(owner.publicKey, session.publicKey, id, 1_000, 1, 60, stake),
+            // A one-day wake-up pledge: clock-in only in the first 30 s, on Solana's clock.
+            PledgeProgram.createCommitment(owner.publicKey, session.publicKey, id, 0, 1, 60, stake, Kind.WAKE, 0, 30),
             PledgeProgram.transferSol(owner.publicKey, session.publicKey, SESSION_FLOAT),
         )))
         val address = PledgeProgram.commitment(owner.publicKey, id).base58()
@@ -115,11 +118,13 @@ class DevnetE2ETest {
         assertEquals(session.address, c.clockInAuthority)
         assertEquals(stake, c.totalAmount)
         assertEquals(id, c.id)
+        assertEquals(Kind.WAKE, c.kind)
+        assertEquals(30, c.windowSec)
         assertEquals(7_000 * PledgeProgram.UNIT, skr(owner))
 
         val day = c.dayAt(chainTime())
         println("clock  " + send(session, listOf(session),
-            listOf(PledgeProgram.clockIn(session.publicKey, SolanaPublicKey.from(address), day, 1_234))))
+            listOf(PledgeProgram.clockIn(session.publicKey, SolanaPublicKey.from(address), day, 0))))
         c = Commitment.decode(address, account(address)!!)
         assertEquals(1, c.completedDays)
         assertEquals(true, c.clockedIn(0))
@@ -129,5 +134,13 @@ class DevnetE2ETest {
             listOf(PledgeProgram.settle(session.publicKey, owner.publicKey, SolanaPublicKey.from(address)))))
         assertNull(account(address))
         assertEquals(10_000 * PledgeProgram.UNIT, skr(owner))
+        val profileAddress = PledgeProgram.profile(owner.publicKey).base58()
+        val p = Profile.decode(profileAddress, account(profileAddress)!!)
+        assertEquals(owner.address, p.authority)
+        assertEquals(1, p.settled)
+        assertEquals(1, p.perfect)
+        assertEquals(true, p.perfectIn(Kind.WAKE))
+        assertEquals(stake, p.returned)
+        println("profile ${p.started} started, ${p.perfect} perfect, kinds ${p.perfectKinds}")
     }
 }

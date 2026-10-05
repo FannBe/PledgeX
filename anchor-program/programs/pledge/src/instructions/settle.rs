@@ -2,11 +2,13 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Burn, CloseAccount, Mint, Token, TokenAccount, Transfer};
 
 use crate::errors::PledgeError;
-use crate::state::{Commitment, SettledEvent, VAULT_SEED};
+use crate::state::{Commitment, Profile, SettledEvent, PROFILE_SEED, VAULT_SEED};
 
 #[derive(Accounts)]
 pub struct Settle<'info> {
-    /// Anyone may settle (the owner, or a crank); they only pay the fee.
+    /// Anyone may settle (the owner, or a crank); they pay the fee, and the profile's
+    /// rent for a commitment made before profiles existed.
+    #[account(mut)]
     pub caller: Signer<'info>,
 
     /// CHECK: the owner; receives the refund's rent and the commitment's rent.
@@ -39,7 +41,17 @@ pub struct Settle<'info> {
     #[account(mut)]
     pub token_mint: Account<'info, Mint>,
 
+    #[account(
+        init_if_needed,
+        payer = caller,
+        space = Profile::LEN,
+        seeds = [PROFILE_SEED, commitment.authority.as_ref()],
+        bump
+    )]
+    pub profile: Account<'info, Profile>,
+
     pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
 }
 
 pub fn handle_settle(ctx: Context<Settle>) -> Result<()> {
@@ -111,6 +123,36 @@ pub fn handle_settle(ctx: Context<Settle>) -> Result<()> {
     ))?;
 
     commitment.settled = true;
+
+    let kept = commitment.completed_days as u32;
+    let missed = (commitment.total_days as u32).saturating_sub(kept);
+    let mut best = 0u8;
+    let mut run = 0u8;
+    for day in 0..commitment.total_days {
+        if (commitment.clocked_in_bitmap >> day) & 1 == 1 {
+            run += 1;
+            best = best.max(run);
+        } else {
+            run = 0;
+        }
+    }
+    let profile = &mut ctx.accounts.profile;
+    if profile.authority == Pubkey::default() {
+        profile.authority = commitment.authority;
+        profile.bump = ctx.bumps.profile;
+        profile.pledges_started = 1;
+        profile.total_staked = total_amount;
+    }
+    profile.pledges_settled = profile.pledges_settled.saturating_add(1);
+    profile.days_kept = profile.days_kept.saturating_add(kept);
+    profile.days_missed = profile.days_missed.saturating_add(missed);
+    profile.total_returned = profile.total_returned.saturating_add(refund_amount);
+    profile.total_burned = profile.total_burned.saturating_add(burn_amount);
+    profile.best_streak = profile.best_streak.max(best);
+    if missed == 0 {
+        profile.perfect_pledges = profile.perfect_pledges.saturating_add(1);
+        profile.perfect_kinds |= 1u8 << commitment.kind.min(7);
+    }
 
     emit!(SettledEvent {
         commitment: commitment_key,

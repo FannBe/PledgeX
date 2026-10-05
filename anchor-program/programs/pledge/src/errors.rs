@@ -37,4 +37,13 @@ pub enum PledgeError {
 
     #[msg("This wallet already holds enough test SKR; the faucet refills below 5,000.")]
     FaucetBalanceTooHigh,
+
+    #[msg("Unknown habit kind.")]
+    InvalidKind,
+
+    #[msg("The start must be within the next two days and the window inside one day.")]
+    InvalidSchedule,
+
+    #[msg("Today's value is over your limit, so this day cannot be clocked in.")]
+    LimitExceeded,
 }

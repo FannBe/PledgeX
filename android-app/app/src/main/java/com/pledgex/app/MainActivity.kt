@@ -7,6 +7,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import com.pledgex.app.ui.PledgeApp
 import com.pledgex.app.ui.PledgeTheme
@@ -14,6 +15,14 @@ import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 
 class MainActivity : ComponentActivity() {
     private val vm: PledgeViewModel by viewModels()
+    private val notifications = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
+
+    /** Asked when a pledge is created: the daily reminder is a notification. */
+    private fun askNotifications() {
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            notifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,7 +30,7 @@ class MainActivity : ComponentActivity() {
         // Must be created before the activity starts: it registers an activity-result launcher.
         val sender = ActivityResultSender(this)
         vm.setStepPermission(hasStepPermission())
-        setContent { PledgeTheme { PledgeApp(vm, sender) } }
+        setContent { PledgeTheme { PledgeApp(vm, sender, ::askNotifications) } }
     }
 
     fun hasStepPermission() = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||

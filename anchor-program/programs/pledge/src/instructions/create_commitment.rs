@@ -2,10 +2,12 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 use crate::errors::PledgeError;
-use crate::state::{Commitment, CommitmentCreatedEvent, COMMITMENT_SEED, VAULT_SEED};
+use crate::state::{kind, Commitment, CommitmentCreatedEvent, Profile, COMMITMENT_SEED, PROFILE_SEED, VAULT_SEED};
 
 pub const MIN_DAY_SEC: u64 = 60;
 pub const MAX_DAY_SEC: u64 = 7 * 86_400;
+/// How far ahead day 0 may start (a 6 AM pledge made in the evening starts tomorrow).
+pub const MAX_START_DELAY: i64 = 2 * 86_400;
 
 #[derive(Accounts)]
 #[instruction(commitment_id: u64)]
@@ -37,6 +39,15 @@ pub struct CreateCommitment<'info> {
     pub vault: Account<'info, TokenAccount>,
 
     #[account(
+        init_if_needed,
+        payer = user,
+        space = Profile::LEN,
+        seeds = [PROFILE_SEED, user.key().as_ref()],
+        bump
+    )]
+    pub profile: Account<'info, Profile>,
+
+    #[account(
         mut,
         token::mint = token_mint,
         token::authority = user,
@@ -50,6 +61,7 @@ pub struct CreateCommitment<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn handle_create_commitment(
     ctx: Context<CreateCommitment>,
     commitment_id: u64,
@@ -57,6 +69,9 @@ pub fn handle_create_commitment(
     total_days: u8,
     day_duration_sec: u64,
     amount: u64,
+    pledge_kind: u8,
+    start_at: i64,
+    window_sec: u32,
 ) -> Result<()> {
     require!((1..=64).contains(&total_days), PledgeError::InvalidTotalDays);
     require!(
@@ -64,12 +79,17 @@ pub fn handle_create_commitment(
         PledgeError::InvalidDuration
     );
     require!(amount > 0, PledgeError::InvalidAmount);
-    require!(target_steps > 0, PledgeError::InvalidTarget);
+    require!(pledge_kind < kind::COUNT, PledgeError::InvalidKind);
+    require!(target_steps > 0 || pledge_kind == kind::WAKE, PledgeError::InvalidTarget);
+    require!((window_sec as u64) <= day_duration_sec, PledgeError::InvalidSchedule);
 
     let now = Clock::get()?.unix_timestamp;
+    // 0 means "now"; otherwise a start up to two days ahead (never in the past).
+    let start = if start_at == 0 { now } else { start_at };
+    require!(start >= now && start <= now + MAX_START_DELAY, PledgeError::InvalidSchedule);
+
     let session = ctx.accounts.clock_in_authority.key();
     let commitment = &mut ctx.accounts.commitment;
-
     commitment.authority = ctx.accounts.user.key();
     commitment.clock_in_authority = if session == System::id() {
         Pubkey::default()
@@ -82,13 +102,23 @@ pub fn handle_create_commitment(
     commitment.total_days = total_days;
     commitment.completed_days = 0;
     commitment.day_duration_sec = day_duration_sec;
-    commitment.start_timestamp = now;
+    commitment.start_timestamp = start;
     commitment.total_amount = amount;
     commitment.settled = false;
     commitment.clocked_in_bitmap = 0;
     commitment.bump = ctx.bumps.commitment;
     commitment.vault_bump = ctx.bumps.vault;
     commitment.commitment_id = commitment_id;
+    commitment.kind = pledge_kind;
+    commitment.window_sec = window_sec;
+
+    let profile = &mut ctx.accounts.profile;
+    if profile.authority == Pubkey::default() {
+        profile.authority = ctx.accounts.user.key();
+        profile.bump = ctx.bumps.profile;
+    }
+    profile.pledges_started = profile.pledges_started.saturating_add(1);
+    profile.total_staked = profile.total_staked.saturating_add(amount);
 
     token::transfer(
         CpiContext::new(
@@ -110,7 +140,8 @@ pub fn handle_create_commitment(
         target_steps,
         total_days,
         day_duration_sec,
-        start_timestamp: now,
+        start_timestamp: start,
+        kind: pledge_kind,
     });
 
     Ok(())

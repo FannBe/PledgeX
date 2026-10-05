@@ -2,9 +2,26 @@
 
 # PledgeX
 
-**Stake on your daily steps. Walk, and it comes back. Skip a day, and that day's stake burns.**
+**Stake on your daily habits. Keep the day, and it comes back. Miss it, and that day's stake burns.**
 
-PledgeX is an Android app and a Solana program. You lock test SKR for a number of days with a daily step goal. Each day your phone's step counter reaches the goal, you clock in on chain. After the last day the program returns the days you kept and **burns** the days you missed. Nobody receives a missed stake, including the developers.
+PledgeX is an Android app and a Solana program. You lock test SKR for a number of days on a daily habit. Each day you keep it, you clock in on chain. After the last day the program returns the days you kept and **burns** the days you missed. Nobody receives a missed stake, including the developers.
+
+### Habits the program enforces
+
+| Habit | How a day is checked | Clock-in window (on Solana's clock) |
+|---|---|---|
+| **Steps** (3K–10K) | the phone's hardware step counter; the phone reports the count | any time in the day |
+| **The 6:00 AM Club** | **Solana's clock alone**, so it cannot be faked | 05:00–06:00 local (the first hour of the day) |
+| **Screen detox** (< 1–3 h) | Android usage statistics; the phone reports the minutes | 22:00–24:00 (the last two hours of the day) |
+
+### In the app
+
+- **Active**: today's ring, the daily deadline, and a one-tap clock-in signed by the phone's session key (no wallet screen).
+- **Explore**: the habit catalog. You configure every term (target, days, stake, real or 2-minute demo days) before anything is signed.
+- **Ranks**: a leaderboard, the total staked and burned, the success rate and live program activity. All of it is read from the chain.
+- **Vault**: the escrow, your lifetime totals and **soulbound badges**. The badges are read from your on-chain `Profile`, a program account that cannot be transferred.
+- **Judge Lab**: a guided six-minute demo with real transactions.
+- **Daily reminders** before a day's window closes, and a **shareable result card** with the Explorer link.
 
 Runs on **Solana devnet** with a test token. Site: <https://fannbe.github.io/PledgeX/> · APK: [releases](https://github.com/FannBe/PledgeX/releases)
 
@@ -13,6 +30,7 @@ Runs on **Solana devnet** with a test token. Site: <https://fannbe.github.io/Ple
 | Program | [`68c1eNdHAfNWJhCWhtqumiqzYyFcDNLkfgwKwdFwFRcd`](https://explorer.solana.com/address/68c1eNdHAfNWJhCWhtqumiqzYyFcDNLkfgwKwdFwFRcd?cluster=devnet) |
 | Test SKR mint | [`F4L7W4qgFAuU2iyg5ePBENXTHeZyTPor4tJMfhUHqfgQ`](https://explorer.solana.com/address/F4L7W4qgFAuU2iyg5ePBENXTHeZyTPor4tJMfhUHqfgQ?cluster=devnet) (9 decimals) |
 | Mint authority | the program's `faucet` PDA `7Twns5ha3zR36upXJpSkUo6wsPRMS78byuJECimhkDHL`; no person holds a minting key |
+| Accounts | `Commitment` `[commitment, owner, id]`, its vault `[vault, commitment]`, `Profile` `[profile, owner]` |
 
 ## Try it in six minutes
 
@@ -40,11 +58,12 @@ wallet ─────────────────────── fau
 - **Day windows use Solana time.** Day *i* is `[start + i·day, start + (i+1)·day)`, read from the Clock sysvar, never the phone's clock. The app shows the countdown in chain time too.
 - **Session key.** At creation the owner names a key kept on the phone (Ed25519, its seed encrypted with an Android Keystore AES key) as `clock_in_authority`, and sends it 0.003 SOL for fees. That key can call `clock_in` and nothing else. It cannot move the stake, so daily clock-ins need no wallet screen. It also pays the fee for `settle`, which anyone may call and which pays only the owner.
 - **Settle** refunds `total × kept / days`, burns the exact remainder (the vault always ends at zero), then closes the vault and the commitment. Both rents go back to the owner.
-- **The program refuses** a clock-in below the target, a second clock-in for the same day, a clock-in outside the day's window, a clock-in signed by any other key, and settling before the end.
+- **The program refuses** a step count below the target, screen time over the limit, a second clock-in for the same day, a clock-in outside the day's window (including the 6 AM and late-evening windows), a clock-in signed by any other key, and settling before the end.
+- **Profile.** `create_commitment` creates the owner's `Profile` when it is missing; `settle` updates it with days kept and missed, the amounts returned and burned, perfect pledges per habit, and the best streak. Badges and ranks are read from it.
 
 ### Honest limits
 
-- **The step count comes from the phone.** The program checks who clocks in, which day it is and that each day counts once. It cannot verify the steps themselves.
+- **Steps and screen time come from the phone.** The program checks who clocks in, when, and that each day counts once. It cannot verify the number itself. Only the 6 AM Club is checked entirely on chain.
 - The hardware counter counts since boot. The app stores a per-day baseline and carries steps over a reboot. Steps between the last time the app saw the counter and the start of a new day count toward the new day.
 - Devnet only. Test SKR has no value and is not the real SKR token.
 - **Gas sponsor.** The public devnet airdrop is often down or rate-limited. When it fails, the release APK falls back to a bundled devnet-only key that sends an empty wallet 0.015 SOL, enough for one pledge. That key holds only a little devnet SOL and has no authority over the program or the token. Builds without `sponsor.seed` in `local.properties` skip this step.

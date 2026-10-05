@@ -42,7 +42,7 @@
   <section class="hero">
     <img src="logo.png" alt="PledgeX logo" width="148" height="148">
     <h1>PledgeX</h1>
-    <p class="tag">Stake on your daily steps. Walk, and it comes back. Skip a day, and that day's stake burns: nobody receives it, not even us.</p>
+    <p class="tag">Stake on your daily habits: steps, the 6 AM Club, a screen detox. Keep the day and it comes back. Miss it and that day's stake burns: nobody receives it, not even us.</p>
     <div class="btns">
       <a class="btn primary" href="https://github.com/FannBe/PledgeX/releases">Download the Android app</a>
       <a class="btn ghost" href="https://github.com/FannBe/PledgeX">Source code</a>
@@ -56,9 +56,17 @@
     <div class="card"><b>3 · Settle</b><p>After the last day, the program returns the days you kept and burns the days you missed. Anyone can trigger settle, but the refund only goes to you.</p></div>
   </div>
 
+  <h2>Habits the program enforces</h2>
+  <div class="grid">
+    <div class="card"><b>Steps</b><p>3,000–10,000 a day, from the phone's hardware step counter. The phone reports the count.</p></div>
+    <div class="card"><b>The 6:00 AM Club</b><p>Clock in between 05:00 and 06:00. Solana's clock alone decides, so this one cannot be faked.</p></div>
+    <div class="card"><b>Screen detox</b><p>Stay under 1–3 hours of screen time, from Android's usage statistics. Clock in between 22:00 and midnight.</p></div>
+  </div>
+  <p>The app also has a leaderboard and live activity read from the chain, soulbound badges from your on-chain Profile, daily reminders and a shareable result card.</p>
+
   <h2>Try the whole thing in six minutes</h2>
   <ol>
-    <li>Install the app. Tap <b>Use a demo wallet</b>, or connect Phantom with Testnet Mode on (Settings → Developer Settings).</li>
+    <li>Install the app. Tap <b>Use a demo wallet</b>, or connect Phantom with Testnet Mode on (Settings → Developer Settings). Then open <b>Judge Lab</b> in the header: it walks you through the steps below.</li>
     <li>Tap <b>Get devnet SOL</b>, then <b>Get 10,000 test SKR</b>. The test SKR comes from the program's own faucet.</li>
     <li>Create a pledge with <b>Day length: Demo (2 minutes)</b> and 3 days.</li>
     <li>On day 1, tap <b>Add 1,000 simulated steps</b> until you reach the goal, then <b>Clock in</b>. Let day 2 pass without clocking in. Clock in on day 3.</li>
@@ -72,6 +80,7 @@
     <tr><td>Test SKR mint</td><td><a href="https://explorer.solana.com/address/F4L7W4qgFAuU2iyg5ePBENXTHeZyTPor4tJMfhUHqfgQ?cluster=devnet"><code>F4L7W4qgFAuU2iyg5ePBENXTHeZyTPor4tJMfhUHqfgQ</code></a></td></tr>
     <tr><td>Mint authority</td><td>The program's faucet address <code>7Twns5ha3zR36upXJpSkUo6wsPRMS78byuJECimhkDHL</code>. No person holds a minting key.</td></tr>
     <tr><td>Instructions</td><td><code>create_commitment</code>, <code>clock_in</code>, <code>settle</code>, <code>faucet</code></td></tr>
+    <tr><td>Accounts</td><td><code>Commitment</code>, its token vault, and one <code>Profile</code> per wallet (lifetime record, read by badges and ranks)</td></tr>
     <tr><td>Day windows</td><td>Day <i>i</i> runs from <code>start + i × day_length</code> to the next day's start, measured in Solana time rather than the phone's clock. The program refuses a second clock-in for the same day, a clock-in by any other key, and settling early.</td></tr>
   </table>
 

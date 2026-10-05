@@ -38,6 +38,10 @@ export const commitmentPda = (user, id) =>
   PublicKey.findProgramAddressSync([Buffer.from("commitment"), user.toBuffer(), u64(id)], PROGRAM_ID)[0];
 export const vaultPda = (commitment) =>
   PublicKey.findProgramAddressSync([Buffer.from("vault"), commitment.toBuffer()], PROGRAM_ID)[0];
+export const profilePda = (user) =>
+  PublicKey.findProgramAddressSync([Buffer.from("profile"), user.toBuffer()], PROGRAM_ID)[0];
+export const KIND = { STEPS: 0, SCREEN: 1, WAKE: 2 };
+const i64 = (v) => { const b = Buffer.alloc(8); b.writeBigInt64LE(BigInt(v)); return b; };
 export const faucetPda = () => PublicKey.findProgramAddressSync([Buffer.from("faucet")], PROGRAM_ID)[0];
 export const ata = (owner) => getAssociatedTokenAddressSync(SKR_MINT, owner);
 
@@ -52,12 +56,13 @@ export function faucetIxs(user) {
   ];
 }
 
-export function createCommitmentIx({ user, session, id, targetSteps, totalDays, daySec, amount }) {
+export function createCommitmentIx({ user, session, id, targetSteps, totalDays, daySec, amount, kind = 0, startAt = 0, windowSec = 0 }) {
   const commitment = commitmentPda(user, id);
   return ix(
-    [w(user, true), r(session ?? SystemProgram.programId), w(commitment), w(vaultPda(commitment)),
+    [w(user, true), r(session ?? SystemProgram.programId), w(commitment), w(vaultPda(commitment)), w(profilePda(user)),
       w(ata(user)), r(SKR_MINT), r(TOKEN_PROGRAM_ID), r(SystemProgram.programId), r(SYSVAR_RENT_PUBKEY)],
-    Buffer.concat([disc("create_commitment"), u64(id), u32(targetSteps), u8(totalDays), u64(daySec), u64(amount)]),
+    Buffer.concat([disc("create_commitment"), u64(id), u32(targetSteps), u8(totalDays), u64(daySec), u64(amount),
+      u8(kind), i64(startAt), u32(windowSec)]),
   );
 }
 
@@ -67,7 +72,8 @@ export function clockInIx({ signer, commitment, dayIndex, steps }) {
 
 export function settleIx({ caller, user, commitment }) {
   return ix(
-    [r(caller, true), w(user), w(commitment), w(vaultPda(commitment)), w(ata(user)), w(SKR_MINT), r(TOKEN_PROGRAM_ID)],
+    [w(caller, true), w(user), w(commitment), w(vaultPda(commitment)), w(ata(user)), w(SKR_MINT), w(profilePda(user)),
+      r(TOKEN_PROGRAM_ID), r(SystemProgram.programId)],
     disc("settle"),
   );
 }
@@ -87,8 +93,23 @@ export function decodeCommitment(data) {
   const settled = b[o++] === 1;
   const bitmap = b.readBigUInt64LE(o); o += 8;
   o += 2;
-  const id = b.readBigUInt64LE(o);
-  return { authority, clockInAuthority, tokenMint, vault, targetSteps, totalDays, completedDays, daySec, start, totalAmount, settled, bitmap, id };
+  const id = b.readBigUInt64LE(o); o += 8;
+  const kind = b[o++];
+  const windowSec = b.readUInt32LE(o);
+  return { authority, clockInAuthority, tokenMint, vault, targetSteps, totalDays, completedDays, daySec, start, totalAmount, settled, bitmap, id, kind, windowSec };
+}
+
+export const PROFILE_DISC = createHash("sha256").update("account:Profile").digest().subarray(0, 8);
+/** Decode a Profile account (layout of state.rs). */
+export function decodeProfile(data) {
+  const b = Buffer.from(data);
+  if (!b.subarray(0, 8).equals(PROFILE_DISC)) throw new Error("not a Profile");
+  let o = 40;
+  const n = () => { const v = b.readUInt32LE(o); o += 4; return v; };
+  const big = () => { const v = b.readBigUInt64LE(o); o += 8; return v; };
+  const started = n(), settled = n(), perfect = n(), kept = n(), missed = n();
+  const staked = big(), returned = big(), burned = big();
+  return { authority: new PublicKey(b.subarray(8, 40)), started, settled, perfect, kept, missed, staked, returned, burned, bestStreak: b[o], perfectKinds: b[o + 1] };
 }
 
 export async function send(conn, ixs, signers, feePayer = signers[0]) {

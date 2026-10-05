@@ -20,6 +20,9 @@ pub mod pledge {
         total_days: u8,
         day_duration_sec: u64,
         amount: u64,
+        kind: u8,
+        start_at: i64,
+        window_sec: u32,
     ) -> Result<()> {
         instructions::create_commitment::handle_create_commitment(
             ctx,
@@ -28,10 +31,14 @@ pub mod pledge {
             total_days,
             day_duration_sec,
             amount,
+            kind,
+            start_at,
+            window_sec,
         )
     }
 
-    /// Clock in for one day. Signed by the owner wallet or by the device session key.
+    /// Clock in for one day with that day's value (steps, or screen minutes; 0 for
+    /// wake-up). Signed by the owner wallet or by the device session key.
     pub fn clock_in(ctx: Context<ClockIn>, day_index: u8, steps_reported: u32) -> Result<()> {
         instructions::clock_in::handle_clock_in(ctx, day_index, steps_reported)
     }
