@@ -47,6 +47,7 @@ wallet ─────────────────────── fau
 - **The step count comes from the phone.** The program checks who clocks in, which day it is and that each day counts once. It cannot verify the steps themselves.
 - The hardware counter counts since boot. The app stores a per-day baseline and carries steps over a reboot. Steps between the last time the app saw the counter and the start of a new day count toward the new day.
 - Devnet only. Test SKR has no value and is not the real SKR token.
+- **Gas sponsor.** The public devnet airdrop is often down or rate-limited. When it fails, the release APK falls back to a bundled devnet-only key that sends an empty wallet 0.015 SOL, enough for one pledge. That key holds only a little devnet SOL and has no authority over the program or the token. Builds without `sponsor.seed` in `local.properties` skip this step.
 
 ## Repository
 

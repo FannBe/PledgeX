@@ -18,6 +18,9 @@ android {
         versionName = "2.0.0"
         // A keyed RPC (e.g. Helius devnet) lives in local.properties as rpc.url, never in
         // the repo; without one the app uses the public devnet endpoint.
+        // A devnet-only key holding a little SOL that tops up empty wallets when the
+        // public airdrop is down. It has no authority over the program or the token.
+        buildConfigField("String", "SPONSOR_SEED", "\"${localProps().getProperty("sponsor.seed") ?: ""}\"")
         buildConfigField("String", "RPC_URL", "\"${localProps().getProperty("rpc.url") ?: "https://api.devnet.solana.com"}\"")
     }
 

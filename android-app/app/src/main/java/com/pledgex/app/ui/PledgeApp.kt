@@ -267,7 +267,8 @@ private fun Loading() = Panel {
 
 @Composable
 private fun Funding(s: UiState, onSol: () -> Unit, onSkr: () -> Unit) {
-    val needSol = s.lowSol
+    // Only before a pledge: during one, clock-ins and settle are paid by the session key.
+    val needSol = s.lowSol && s.commitment == null
     val needSkr = s.commitment == null && s.skr != null && s.skr < PledgeProgram.FAUCET_CAP
     if (!needSol && !needSkr) return
     val open = openUrl()
@@ -361,7 +362,7 @@ private fun TodayCard(s: UiState, c: Commitment, onClockIn: () -> Unit, onDemoSt
 
         if (c.isDemo && !done) SecondaryButton("Add 1,000 simulated steps (demo only)", onClick = onDemoSteps)
         if (!c.isDemo && !s.hasStepSensor) Body("This device has no step counter, so it cannot count steps for a real pledge. Use a phone, or try a demo pledge.", Amber)
-        if (s.hasStepSensor && !s.stepPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if (!c.isDemo && s.hasStepSensor && !s.stepPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             SecondaryButton("Allow step counting") { permission.launch(Manifest.permission.ACTIVITY_RECOGNITION) }
         }
     }

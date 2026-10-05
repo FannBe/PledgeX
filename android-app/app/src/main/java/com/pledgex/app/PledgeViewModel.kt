@@ -240,27 +240,37 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---- actions -----------------------------------------------------------------------
 
-    /** Devnet SOL from the RPC's faucet. */
+    /**
+     * Devnet SOL: the RPC's airdrop first; when that is down or limited (often), the
+     * bundled gas sponsor sends a small one-time amount instead.
+     */
     fun airdrop() = viewModelScope.launch {
         val owner = _state.value.wallet ?: return@launch
         _state.update { it.copy(pending = it.pending + "airdrop", error = null) }
-        try {
+        val fromFaucet = runCatching {
             val sig = rpc.requestAirdrop(owner, AIRDROP_LAMPORTS)
             var landed = false
-            repeat(40) {
-                if (!landed && rpc.isConfirmed(sig)) landed = true
-                if (!landed) delay(1000)
+            repeat(20) { if (!landed) { landed = rpc.isConfirmed(sig); if (!landed) delay(1000) } }
+            sig.takeIf { landed }
+        }.onFailure { Log.w(TAG, "airdrop failed", it) }.getOrNull()
+        when {
+            fromFaucet != null -> {
+                record("Devnet SOL", fromFaucet, "+0.5 SOL from the devnet faucet")
+                done("0.5 devnet SOL added.")
             }
-            if (landed) {
-                record("Devnet SOL", sig, "+0.5 SOL from the devnet faucet")
-                _state.update { it.copy(message = "0.5 devnet SOL added.") }
-                refresh()
-            } else {
-                _state.update { it.copy(error = "The devnet faucet did not confirm in time. Try again, or use faucet.solana.com.") }
+            BuildConfig.SPONSOR_SEED.length == 64 && (_state.value.lamports ?: 0) < MIN_SOL_TO_PLEDGE -> {
+                val sponsor = LocalKey.fromSeed(BuildConfig.SPONSOR_SEED.chunked(2).map { it.toInt(16).toByte() }.toByteArray())
+                val sig = submitLocal("sponsor", sponsor, listOf(sponsor)) {
+                    listOf(PledgeProgram.transferSol(sponsor.publicKey, SolanaPublicKey.from(owner), SPONSOR_LAMPORTS))
+                }
+                if (sig != null) {
+                    record("Devnet SOL", sig, "+0.015 SOL from the PledgeX gas sponsor")
+                    done("0.015 devnet SOL added — enough for a pledge.")
+                } else {
+                    _state.update { it.copy(error = "Couldn't get devnet SOL right now. Copy your address and use faucet.solana.com, then come back.") }
+                }
             }
-        } catch (e: Exception) {
-            Log.w(TAG, "airdrop failed", e)
-            _state.update { it.copy(error = "The devnet SOL faucet is busy or limited. Copy your address and use faucet.solana.com, then come back.") }
+            else -> _state.update { it.copy(error = "The devnet SOL faucet is busy or limited. Copy your address and use faucet.solana.com, then come back.") }
         }
         _state.update { it.copy(pending = it.pending - "airdrop") }
     }
@@ -462,6 +472,10 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
             chain.any { it is java.util.concurrent.TimeoutException } -> "The wallet didn't answer in time. Nothing was sent."
             "authorization request failed" in lower || "incorrect mode" in lower ->
                 "The wallet refused. In Phantom turn on Settings → Developer Settings → Testnet Mode and pick Solana Devnet, then try again."
+            // The client gives up when the wallet starts listening too late, most often
+            // because Android's "Open with" chooser waited for a tap.
+            "websocket" in lower || "establishing" in lower || "econnrefused" in lower ->
+                "The wallet didn't answer in time. If Android asks which wallet to open, pick it right away (or choose \"Always\"), then try again."
             "insufficient" in lower || "0x1" in lower && "transfer" in lower ->
                 "Not enough devnet SOL for this. Tap \"Get devnet SOL\" and try again."
             "blockhash not found" in lower -> "The approval took too long and the transaction expired. Nothing was sent — try again."
@@ -496,6 +510,8 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
         const val POLL_EVERY_S = 6
         const val WALLET_GRACE_MS = 6_000L
         const val AIRDROP_LAMPORTS = 500_000_000L
+        /** What the sponsor sends: a pledge's deposits, the session float and fees, with room. */
+        const val SPONSOR_LAMPORTS = 15_000_000L
         /** A demo day: two minutes, so a 3-day pledge runs its whole life in six. */
         const val DEMO_DAY_SEC = 120L
         const val SESSION_FEE_RESERVE = 950_000L
@@ -504,8 +520,10 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
 }
 
 fun formatSkr(amount: Long): String {
-    val whole = amount / PledgeProgram.UNIT
-    val frac = (amount % PledgeProgram.UNIT) / 10_000_000 // two decimals
+    // Rounded to cents, so a refund and its burn still add up to the stake on screen.
+    val cents = (amount + 5_000_000) / 10_000_000
+    val whole = cents / 100
+    val frac = cents % 100
     return if (frac == 0L) "%,d".format(whole) else "%,d.%02d".format(whole, frac)
 }
 
