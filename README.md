@@ -6,7 +6,7 @@
 
 PledgeX is an Android app and a Solana program. You lock test SKR for a number of days with a daily step goal. Each day your phone's step counter reaches the goal, you clock in on chain. After the last day the program returns the days you kept and **burns** the days you missed. Nobody receives a missed stake, including the developers.
 
-Runs on **Solana devnet** with a test token. Site: <https://fannbe.github.io/PledgeX/> · APK: [latest release](https://github.com/FannBe/PledgeX/releases/latest)
+Runs on **Solana devnet** with a test token. Site: <https://fannbe.github.io/PledgeX/> · APK: [releases](https://github.com/FannBe/PledgeX/releases)
 
 | | |
 |---|---|
