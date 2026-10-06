@@ -90,6 +90,7 @@ fun PledgeApp(vm: PledgeViewModel, sender: ActivityResultSender, askNotification
     var help by rememberSaveable { mutableStateOf(false) }
     val actions = Actions(vm, sender, { tab = it }, { judgeLab = true }, askNotifications)
 
+    if (!s.onboarded && s.wallet == null) { Onboarding(vm::finishOnboarding); return }
     Box(Modifier.fillMaxSize().cyberBackground()) {
         if (s.wallet == null) {
             Column(

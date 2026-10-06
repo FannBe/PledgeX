@@ -160,12 +160,17 @@ fun VaultTab(s: UiState, a: Actions) {
     }
     BADGES.chunked(2).forEach { row ->
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            row.forEach { b -> BadgeCard(b, p != null && b.earned(p), Modifier.weight(1f)) }
+            row.forEach { b ->
+                val id = BADGES.indexOf(b)
+                BadgeCard(b, p != null && b.earned(p), id in s.badgesClaimed, "badge$id" in s.pending, Modifier.weight(1f),
+                    onClaim = { a.vm.claimBadge(a.sender, id, b.title) },
+                    onView = { open("https://explorer.solana.com/address/${s.wallet}/tokens?cluster=devnet") })
+            }
             if (row.size == 1) Spacer(Modifier.weight(1f))
         }
     }
     GlassCard {
-        Body("Badges are read from your Profile: an account of the PledgeX program that settle updates. It can't be sold or transferred, which is what makes it soulbound. Only real pledges (days of an hour or more) earn badges and rank; demo pledges move the money but can't be farmed for them.", TextLo, 13)
+        Body("Earned badges are minted as soulbound NFTs (Token-2022, non-transferable, one per wallet): they show in Phantom and can never be sold or moved. They are earned from your on-chain Profile, and only real pledges (days of an hour or more) count; demo pledges move the money but can't be farmed for badges.", TextLo, 13)
         if (p != null) TextButton(onClick = { open(explorerAddress(p.address)) }) { Text("View your Profile account ↗", color = Cyan, fontSize = 13.sp) }
     }
     Overline("Immutable audit trail")
@@ -186,7 +191,7 @@ fun VaultTab(s: UiState, a: Actions) {
 }
 
 @Composable
-private fun BadgeCard(b: Badge, earned: Boolean, modifier: Modifier) {
+private fun BadgeCard(b: Badge, earned: Boolean, claimed: Boolean, busy: Boolean, modifier: Modifier, onClaim: () -> Unit, onView: () -> Unit) {
     Column(
         modifier.clip(RoundedCornerShape(20.dp)).background(Card)
             .border(1.dp, if (earned) b.color.copy(alpha = 0.6f) else Hairline, RoundedCornerShape(20.dp)).padding(16.dp),
@@ -195,6 +200,10 @@ private fun BadgeCard(b: Badge, earned: Boolean, modifier: Modifier) {
         Box(Modifier.alpha(if (earned) 1f else 0.35f)) { IconTile(b.glyph, if (earned) b.color else TextDim, 50.dp) }
         Text(b.title, color = if (earned) TextHi else TextLo, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
         Text(b.how, color = TextDim, fontSize = 11.sp, textAlign = TextAlign.Center)
-        Text(if (earned) "${b.tier} · earned" else "Locked", color = if (earned) b.color else TextDim, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        when {
+            claimed -> TextButton(onClick = onView) { Text("NFT in your wallet ✓", color = b.color, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+            earned -> GradientButton("Claim NFT", busy = busy, onClick = onClaim)
+            else -> Text("Locked", color = TextDim, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        }
     }
 }

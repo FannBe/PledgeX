@@ -42,6 +42,11 @@ export const profilePda = (user) =>
   PublicKey.findProgramAddressSync([Buffer.from("profile"), user.toBuffer()], PROGRAM_ID)[0];
 export const KIND = { STEPS: 0, SCREEN: 1, WAKE: 2 };
 const i64 = (v) => { const b = Buffer.alloc(8); b.writeBigInt64LE(BigInt(v)); return b; };
+export const TOKEN_2022 = new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
+export const badgeMintPda = (user, badge) =>
+  PublicKey.findProgramAddressSync([Buffer.from("badge"), user.toBuffer(), Buffer.from([badge])], PROGRAM_ID)[0];
+export const badgeAuthorityPda = () => PublicKey.findProgramAddressSync([Buffer.from("badge_auth")], PROGRAM_ID)[0];
+export const badgeAccount = (user, badge) => getAssociatedTokenAddressSync(badgeMintPda(user, badge), user, false, TOKEN_2022);
 export const faucetPda = () => PublicKey.findProgramAddressSync([Buffer.from("faucet")], PROGRAM_ID)[0];
 export const ata = (owner) => getAssociatedTokenAddressSync(SKR_MINT, owner);
 
@@ -63,6 +68,15 @@ export function createCommitmentIx({ user, session, id, targetSteps, totalDays, 
       w(ata(user)), r(SKR_MINT), r(TOKEN_PROGRAM_ID), r(SystemProgram.programId), r(SYSVAR_RENT_PUBKEY)],
     Buffer.concat([disc("create_commitment"), u64(id), u32(targetSteps), u8(totalDays), u64(daySec), u64(amount),
       u8(kind), i64(startAt), u32(windowSec)]),
+  );
+}
+
+/** Mint the caller's soulbound badge NFT (Token-2022, non-transferable, supply 1). */
+export function claimBadgeIx(user, badge) {
+  return ix(
+    [w(user, true), r(profilePda(user)), w(badgeMintPda(user, badge)), r(badgeAuthorityPda()), w(badgeAccount(user, badge)),
+      r(TOKEN_2022), r(ASSOCIATED_TOKEN_PROGRAM_ID), r(SystemProgram.programId)],
+    Buffer.concat([disc("claim_badge"), u8(badge)]),
   );
 }
 

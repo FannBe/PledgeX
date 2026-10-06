@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:orientation="vertical"
+    android:padding="14dp">
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+        <ImageView android:layout_width="22dp" android:layout_height="22dp" android:src="@drawable/app_logo" android:contentDescription="@null" />
+        <TextView android:id="@+id/widget_title" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:layout_marginStart="8dp" android:text="PledgeX" android:textColor="#FFFFFFFF" android:textSize="13sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/widget_day" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="#FF14F195" android:textSize="11sp" android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView android:id="@+id/widget_value" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp"
+        android:textColor="#FFFFFFFF" android:textSize="22sp" android:textStyle="bold" android:fontFamily="monospace" android:maxLines="1" />
+
+    <ProgressBar android:id="@+id/widget_progress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="8dp"
+        android:layout_marginTop="6dp" android:max="1000" android:progressDrawable="@drawable/widget_progress" />
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="horizontal" android:gravity="center_vertical">
+        <TextView android:id="@+id/widget_status" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="#FFA0B4D0" android:textSize="11sp" android:maxLines="1" />
+        <Chronometer android:id="@+id/widget_timer" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+            android:layout_marginStart="4dp" android:textColor="#FFFF453A" android:textSize="11sp" android:textStyle="bold" android:fontFamily="monospace" />
+        <TextView android:id="@+id/widget_action" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:background="@drawable/widget_button" android:paddingStart="12dp" android:paddingEnd="12dp" android:paddingTop="6dp" android:paddingBottom="6dp"
+            android:textColor="#FF030D08" android:textSize="11sp" android:textStyle="bold" android:text="OPEN" />
+    </LinearLayout>
+</LinearLayout>

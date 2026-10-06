@@ -1,0 +1,30 @@
+{
+  "name": "PledgeX · Iron Will",
+  "symbol": "PLDGX",
+  "description": "Finished three real pledges without missing a day. A soulbound PledgeX badge: it cannot be transferred or sold. Solana devnet.",
+  "image": "https://fannbe.github.io/PledgeX/badges/5.png",
+  "external_url": "https://fannbe.github.io/PledgeX/",
+  "attributes": [
+    {
+      "trait_type": "Badge",
+      "value": "Iron Will"
+    },
+    {
+      "trait_type": "Transferable",
+      "value": "No"
+    },
+    {
+      "trait_type": "Network",
+      "value": "Solana Devnet"
+    }
+  ],
+  "properties": {
+    "files": [
+      {
+        "uri": "https://fannbe.github.io/PledgeX/badges/5.png",
+        "type": "image/png"
+      }
+    ],
+    "category": "image"
+  }
+}

@@ -12,6 +12,8 @@ pub const COMMITMENT_SEED: &[u8] = b"commitment";
 pub const VAULT_SEED: &[u8] = b"vault";
 pub const FAUCET_SEED: &[u8] = b"faucet";
 pub const PROFILE_SEED: &[u8] = b"profile";
+pub const BADGE_SEED: &[u8] = b"badge";
+pub const BADGE_AUTH_SEED: &[u8] = b"badge_auth";
 
 /// What a pledge measures, and so how `clock_in`'s reported value and time are checked.
 pub mod kind {
@@ -133,6 +135,13 @@ pub struct SettledEvent {
     pub burned_amount: u64,
     pub completed_days: u8,
     pub total_days: u8,
+}
+
+#[event]
+pub struct BadgeClaimedEvent {
+    pub user: Pubkey,
+    pub badge: u8,
+    pub mint: Pubkey,
 }
 
 #[event]

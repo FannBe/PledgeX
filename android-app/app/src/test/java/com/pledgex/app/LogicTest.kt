@@ -119,6 +119,18 @@ class LogicTest {
     }
 
     @Test
+    fun streakCountsKeptDaysUpToToday() {
+        // Days 0,1 missed? no: 0 kept, 1 missed, 2 kept, 3 kept, today (4) not yet.
+        val c = pledge(UNIT, 7, 3, bitmap = 0b01101)
+        val today = c.dayStart(4) + 10
+        assertEquals(2, c.currentStreak(today))
+        // Once today is kept it counts too.
+        val kept = pledge(UNIT, 7, 4, bitmap = 0b11101)
+        assertEquals(3, kept.currentStreak(today))
+        assertEquals(0, pledge(UNIT, 7, 0).currentStreak(today))
+    }
+
+    @Test
     fun aRealWakePledgeStartsAtTheNextFiveAm() {
         val spec = HabitSpec("x", Kind.WAKE, 0, 7, 1_000, demo = false)
         val start = spec.startAt(chainOffset = 0)

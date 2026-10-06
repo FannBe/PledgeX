@@ -14,8 +14,8 @@ android {
         applicationId = "com.pledgex.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "2.4.0"
+        versionCode = 7
+        versionName = "2.5.0"
         // A keyed RPC (e.g. Helius devnet) lives in local.properties as rpc.url, never in
         // the repo; without one the app uses the public devnet endpoint.
         // A devnet-only key holding a little SOL that tops up empty wallets when the

@@ -46,4 +46,10 @@ pub enum PledgeError {
 
     #[msg("Today's value is over your limit, so this day cannot be clocked in.")]
     LimitExceeded,
+
+    #[msg("There is no badge with that number.")]
+    InvalidBadge,
+
+    #[msg("This badge is not earned yet. Badges come from real pledges (days of an hour or more).")]
+    BadgeNotEarned,
 }

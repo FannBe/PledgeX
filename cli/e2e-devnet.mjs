@@ -6,10 +6,12 @@
 // then a third party settles all three (half refunded, half burned, accounts closed) and
 // the owner's Profile adds up. Usage: node cli/e2e-devnet.mjs [payer-keypair.json]
 import { Keypair, LAMPORTS_PER_SOL, SystemProgram } from "@solana/web3.js";
-import { getMint, createMint, getOrCreateAssociatedTokenAccount, mintTo } from "@solana/spl-token";
+import { getMint, createMint, getOrCreateAssociatedTokenAccount, mintTo, createAssociatedTokenAccountIdempotentInstruction, createTransferCheckedInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { ComputeBudgetProgram } from "@solana/web3.js";
 import {
   connection, loadKeypair, faucetIxs, createCommitmentIx, clockInIx, settleIx, commitmentPda,
   vaultPda, profilePda, ata, decodeCommitment, decodeProfile, send, chainNow, UNIT, SKR_MINT, KIND,
+  claimBadgeIx, badgeMintPda, badgeAccount, TOKEN_2022,
 } from "./lib.mjs";
 
 const conn = connection();
@@ -99,6 +101,22 @@ ok(p.started === 3 && p.settled === 3 && p.kept === 3 && p.missed === 3,
 ok(p.realDaysKept === 0 && p.bestStreak === 0 && p.perfect === 0,
   "demo days (60 s) move the money but earn no rank or badges");
 ok(p.returned === 1_500n * UNIT && p.burned === 1_500n * UNIT && p.staked === 3_000n * UNIT, "profile totals: staked 3,000, returned 1,500, burned 1,500");
+
+// Soulbound badge: "First Pledge" is earned (3 pledges started); minted once, supply 1,
+// no mint authority left, and it cannot leave the wallet. An unearned one is refused.
+const cu = ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 });
+const sigBadge = await send(conn, [cu, claimBadgeIx(user.publicKey, 0)], [user]);
+const badgeMint = await getMint(conn, badgeMintPda(user.publicKey, 0), "confirmed", TOKEN_2022);
+const held = (await conn.getTokenAccountBalance(badgeAccount(user.publicKey, 0))).value.amount;
+ok(held === "1" && badgeMint.supply === 1n && badgeMint.mintAuthority === null && badgeMint.decimals === 0,
+  `badge NFT minted: supply 1, no mint authority left  ${sigBadge}`);
+await expectFail("claiming the same badge twice", "already in use", () => send(conn, [cu, claimBadgeIx(user.publicKey, 0)], [user]));
+await expectFail("an unearned badge (needs a perfect real pledge)", "BadgeNotEarned", () => send(conn, [cu, claimBadgeIx(user.publicKey, 1)], [user]));
+const dest = getAssociatedTokenAddressSync(badgeMintPda(user.publicKey, 0), stranger.publicKey, false, TOKEN_2022);
+await expectFail("transferring the badge", "0x25", () => send(conn, [
+  createAssociatedTokenAccountIdempotentInstruction(user.publicKey, dest, stranger.publicKey, badgeMintPda(user.publicKey, 0), TOKEN_2022),
+  createTransferCheckedInstruction(badgeAccount(user.publicKey, 0), badgeMintPda(user.publicKey, 0), dest, user.publicKey, 1, 0, [], TOKEN_2022),
+], [user]));
 
 await expectFail("faucet for a wallet holding 8,500", "FaucetBalanceTooHigh", () => send(conn, faucetIxs(user.publicKey), [user]));
 

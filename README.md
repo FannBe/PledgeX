@@ -19,7 +19,9 @@ PledgeX is an Android app and a Solana program. You lock test SKR for a number o
 - **Active**: today's ring, the daily deadline, and a one-tap clock-in signed by the phone's session key (no wallet screen).
 - **Explore**: the habit catalog. You configure every term (target, days, stake, real or 2-minute demo days) before anything is signed.
 - **Ranks**: a leaderboard, the total staked and burned, the success rate and live program activity. All of it is read from the chain.
-- **Vault**: the escrow, your lifetime totals and **soulbound badges**. The badges are read from your on-chain `Profile`, a program account that cannot be transferred.
+- **Vault**: the escrow, your lifetime totals and **soulbound NFT badges**. Earn a badge and claim it: `claim_badge` mints a Token-2022 NFT that is non-transferable, one per wallet, supply 1, with no mint authority left. It shows in Phantom.
+- **Home-screen widget**: today's progress and a live countdown to the window closing.
+- **First-run intro**: three short pages, then Judge Lab.
 - **Judge Lab**: a guided six-minute demo with real transactions.
 - **Daily reminders** before a day's window closes, and a **shareable result card** with the Explorer link.
 
@@ -73,7 +75,7 @@ wallet ─────────────────────── fau
 
 ## Roadmap
 
-- **Compressed NFT badges.** Badges are already on chain today as the non-transferable `Profile` account. The next step is to mint each badge as a soulbound Metaplex Bubblegum cNFT, so it shows in any wallet. This was not built for the hackathon deadline.
+- **Compressed badges at scale.** Badges are soulbound Token-2022 NFTs today. With many users, mint them as Metaplex Bubblegum cNFTs to cut the cost per badge.
 - **Health Connect and wearables**, so watches and fitness bands count steps too.
 - **Mainnet with real SKR**, with an optional stablecoin stake.
 - **Group pledges**: missed stakes still burn, so nobody gains from anyone else's miss.
@@ -82,7 +84,7 @@ wallet ─────────────────────── fau
 
 | Path | What |
 |---|---|
-| `anchor-program/` | The program: `create_commitment`, `clock_in`, `settle`, `faucet` (Anchor 0.32) |
+| `anchor-program/` | The program: `create_commitment`, `clock_in`, `settle`, `claim_badge`, `faucet` (Anchor 0.32) |
 | `android-app/` | Kotlin + Jetpack Compose app: Mobile Wallet Adapter 2.2 and web3-solana |
 | `cli/` | `e2e-devnet.mjs` runs a full pledge on the live program; `lib.mjs` holds the same instruction bytes the app builds |
 | `docs/` | The site (GitHub Pages). It is also the wallet-adapter identity: `icon.png` |

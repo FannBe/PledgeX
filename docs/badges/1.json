@@ -1,0 +1,30 @@
+{
+  "name": "PledgeX · 10K Pioneer",
+  "symbol": "PLDGX",
+  "description": "Kept every day of a real steps pledge. A soulbound PledgeX badge: it cannot be transferred or sold. Solana devnet.",
+  "image": "https://fannbe.github.io/PledgeX/badges/1.png",
+  "external_url": "https://fannbe.github.io/PledgeX/",
+  "attributes": [
+    {
+      "trait_type": "Badge",
+      "value": "10K Pioneer"
+    },
+    {
+      "trait_type": "Transferable",
+      "value": "No"
+    },
+    {
+      "trait_type": "Network",
+      "value": "Solana Devnet"
+    }
+  ],
+  "properties": {
+    "files": [
+      {
+        "uri": "https://fannbe.github.io/PledgeX/badges/1.png",
+        "type": "image/png"
+      }
+    ],
+    "category": "image"
+  }
+}

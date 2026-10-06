@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">PledgeX</string>
+    <string name="widget_description">Today\'s pledge: progress, day and time left to clock in</string>
 </resources>

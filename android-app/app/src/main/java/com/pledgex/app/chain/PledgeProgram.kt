@@ -20,6 +20,9 @@ object PledgeProgram {
     val TOKEN_PROGRAM = SolanaPublicKey.from("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
     val ASSOCIATED_TOKEN_PROGRAM = SolanaPublicKey.from("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
     val RENT_SYSVAR = SolanaPublicKey.from("SysvarRent111111111111111111111111111111111")
+    val TOKEN_2022_PROGRAM = SolanaPublicKey.from("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb")
+    /** Badges in program order (claim_badge ids 0..5). */
+    const val BADGE_COUNT = 6
     private val COMPUTE_BUDGET = SolanaPublicKey.from("ComputeBudget111111111111111111111111111111")
 
     const val DECIMALS = 9
@@ -49,6 +52,20 @@ object PledgeProgram {
     suspend fun vault(commitment: SolanaPublicKey) = pda("vault".toByteArray(), commitment.bytes)
     suspend fun faucetAuthority() = pda("faucet".toByteArray())
     suspend fun profile(owner: SolanaPublicKey) = pda("profile".toByteArray(), owner.bytes)
+    suspend fun badgeMint(owner: SolanaPublicKey, badge: Int) = pda("badge".toByteArray(), owner.bytes, byteArrayOf(badge.toByte()))
+    suspend fun badgeAuthority() = pda("badge_auth".toByteArray())
+    suspend fun badgeAccount(owner: SolanaPublicKey, badge: Int): SolanaPublicKey =
+        ProgramDerivedAddress.find(listOf(owner.bytes, TOKEN_2022_PROGRAM.bytes, badgeMint(owner, badge).bytes), ASSOCIATED_TOKEN_PROGRAM).getOrThrow()
+
+    /** Mints the owner's soulbound badge NFT (Token-2022, non-transferable, supply 1). */
+    suspend fun claimBadge(owner: SolanaPublicKey, badge: Int) = TransactionInstruction(
+        PROGRAM_ID,
+        listOf(
+            w(owner, true), r(profile(owner)), w(badgeMint(owner, badge)), r(badgeAuthority()), w(badgeAccount(owner, badge)),
+            r(TOKEN_2022_PROGRAM), r(ASSOCIATED_TOKEN_PROGRAM), r(SYSTEM_PROGRAM),
+        ),
+        discriminator("global", "claim_badge") + byteArrayOf(badge.toByte()),
+    )
 
     suspend fun tokenAccount(owner: SolanaPublicKey): SolanaPublicKey =
         ProgramDerivedAddress.find(listOf(owner.bytes, TOKEN_PROGRAM.bytes, SKR_MINT.bytes), ASSOCIATED_TOKEN_PROGRAM).getOrThrow()
@@ -56,7 +73,7 @@ object PledgeProgram {
     private fun w(key: SolanaPublicKey, signer: Boolean = false) = AccountMeta(key, signer, true)
     private fun r(key: SolanaPublicKey, signer: Boolean = false) = AccountMeta(key, signer, false)
 
-    fun computeBudget(units: Int = 200_000, microLamportsPerUnit: Long = 1_000) = listOf(
+    fun computeBudget(units: Int = 400_000, microLamportsPerUnit: Long = 1_000) = listOf(
         TransactionInstruction(COMPUTE_BUDGET, emptyList(), byteArrayOf(2) + le(4) { putInt(units) }),
         TransactionInstruction(COMPUTE_BUDGET, emptyList(), byteArrayOf(3) + le(8) { putLong(microLamportsPerUnit) }),
     )
@@ -162,6 +179,14 @@ data class Commitment(
     fun dayEnd(day: Int) = start + (day + 1) * daySec
     fun clockedIn(day: Int) = day in 0 until 64 && (bitmap ushr day) and 1L == 1L
     val dailyStake get() = totalAmount / totalDays
+    /** Kept days in a row up to today (today counts once it is clocked in). */
+    fun currentStreak(now: Long): Int {
+        var d = dayAt(now).coerceAtMost(totalDays - 1)
+        if (!clockedIn(d)) d -= 1
+        var n = 0
+        while (d >= 0 && clockedIn(d)) { n++; d-- }
+        return n
+    }
     /** What settle would return now: total x completed / total days, the program's own rounding. */
     val refund get() = (totalAmount.toBigInteger() * completedDays.toBigInteger() / totalDays.toBigInteger()).toLong()
     val burn get() = totalAmount - refund
@@ -246,7 +271,9 @@ enum class PledgeError(val userMessage: String) {
     FaucetBalanceTooHigh("You already hold 5,000 test SKR or more; the faucet refills below that."),
     InvalidKind("Unknown habit kind."),
     InvalidSchedule("That start time or window is not allowed."),
-    LimitExceeded("Today's screen time is over your limit, so this day cannot be clocked in.");
+    LimitExceeded("Today's screen time is over your limit, so this day cannot be clocked in."),
+    InvalidBadge("There is no such badge."),
+    BadgeNotEarned("This badge isn't earned yet. Badges come from real pledges (days of an hour or more).");
 
     companion object {
         private const val FIRST_CODE = 6000

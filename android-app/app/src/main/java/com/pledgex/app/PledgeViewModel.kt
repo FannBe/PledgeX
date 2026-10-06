@@ -85,6 +85,10 @@ data class UiState(
     val slot: Long? = null,
     val screenAccess: Boolean = false,
     val ranks: Ranks? = null,
+    /** Badge ids whose NFT this wallet already holds (minted by claim_badge). */
+    val badgesClaimed: Set<Int> = emptySet(),
+    /** The first-run introduction has been seen. */
+    val onboarded: Boolean = true,
 ) {
     val lowSol get() = lamports != null && lamports < MIN_SOL_TO_PLEDGE
     /** One-tap clock-ins the phone key can still pay for (it must stay rent-exempt). */
@@ -127,9 +131,15 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
             walletKind = prefs.getString("walletKind", null)?.let { runCatching { WalletKind.valueOf(it) }.getOrNull() },
             sessionAddress = session.address,
             hasStepSensor = steps.available,
+            onboarded = prefs.getBoolean("onboarded", false),
         ),
     )
     val state: StateFlow<UiState> = _state
+
+    fun finishOnboarding() {
+        prefs.edit().putBoolean("onboarded", true).apply()
+        _state.update { it.copy(onboarded = true) }
+    }
 
     private var clockOffset = prefs.getLong("clockOffset", 0)
     private var poller: Job? = null
@@ -151,6 +161,7 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
                 if (tick % POLL_EVERY_S == 0) runCatching { refresh() }.onFailure { Log.w(TAG, "refresh", it) }
                 _state.update { it.copy(chainNow = System.currentTimeMillis() / 1000 + clockOffset) }
                 recomputeSteps()
+                if (tick % 5 == 0) pushWidget()
                 tick++
                 delay(1000)
             }
@@ -193,8 +204,12 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
         val commitment = findCommitment(wallet)
         val profileAddress = PledgeProgram.profile(owner).base58()
         val profile = rpc.accountData(profileAddress)?.let { runCatching { Profile.decode(profileAddress, it) }.getOrNull() }
+        val claimed = if (profile == null) emptySet() else runCatching {
+            val mints = (0 until PledgeProgram.BADGE_COUNT).map { PledgeProgram.badgeMint(owner, it).base58() }
+            rpc.multipleAccounts(mints).withIndex().filter { it.value != null }.map { it.index }.toSet()
+        }.getOrDefault(_state.value.badgesClaimed)
         if (_state.value.wallet != wallet) return // switched while reading
-        _state.update { it.copy(lamports = lamports, skr = skr, commitment = commitment, profile = profile, loaded = true) }
+        _state.update { it.copy(lamports = lamports, skr = skr, commitment = commitment, profile = profile, loaded = true, badgesClaimed = claimed) }
         scheduleReminder(commitment, chain)
         followSteps(commitment)
     }
@@ -318,6 +333,37 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun screenAccessIntent() = screen.accessIntent()
+
+    /** The home-screen widget mirrors today's pledge; it only redraws when something changed. */
+    private fun pushWidget() {
+        val s = _state.value
+        val c = s.commitment
+        val toDevice = { chain: Long -> (chain - clockOffset) * 1000 }
+        val state = when {
+            s.wallet == null || !s.loaded -> WidgetState()
+            c == null -> WidgetState(status = "Tap to start a pledge")
+            !c.started(s.chainNow) -> WidgetState(kindLabel(c.kind), "DAY 1/${c.totalDays}", "Starts soon", 0, "Starts in", toDevice(c.start))
+            s.chainNow >= c.end -> WidgetState(kindLabel(c.kind), "DONE", "Pledge finished", 1000, "Settle to get your kept days back", 0, "SETTLE")
+            else -> {
+                val day = c.dayAt(s.chainNow)
+                val done = c.clockedIn(day)
+                val open = s.chainNow >= c.openFrom(day) && s.chainNow < c.openUntil(day)
+                val (value, progress, met) = when (c.kind) {
+                    Kind.WAKE -> Triple(if (done) "Up on time" else "05:00–06:00", if (done) 1000 else 0, open)
+                    Kind.SCREEN -> Triple("${s.todaySteps} / ${c.targetSteps} min", (s.todaySteps * 1000 / c.targetSteps.coerceAtLeast(1)).toInt().coerceIn(0, 1000), s.todaySteps <= c.targetSteps)
+                    else -> Triple("${s.todaySteps.fmt()} / ${c.targetSteps.fmt()}", (s.todaySteps * 1000 / c.targetSteps.coerceAtLeast(1)).toInt().coerceIn(0, 1000), s.todaySteps >= c.targetSteps)
+                }
+                when {
+                    done -> WidgetState(kindLabel(c.kind), "DAY ${day + 1}/${c.totalDays}", value, 1000, "Day kept ✓", 0, "OPEN", done = true)
+                    s.chainNow < c.openFrom(day) -> WidgetState(kindLabel(c.kind), "DAY ${day + 1}/${c.totalDays}", value, progress, "Window opens in", toDevice(c.openFrom(day)))
+                    open -> WidgetState(kindLabel(c.kind), "DAY ${day + 1}/${c.totalDays}", value, progress,
+                        "${formatSkr(c.dailyStake)} SKR at stake · ", toDevice(c.openUntil(day)), if (met) "CLOCK IN" else "OPEN")
+                    else -> WidgetState(kindLabel(c.kind), "DAY ${day + 1}/${c.totalDays}", value, progress, "Window closed for today", 0)
+                }
+            }
+        }
+        PledgeWidget.push(getApplication(), state)
+    }
 
     // ---- wallet ------------------------------------------------------------------------
 
@@ -510,6 +556,14 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
     private suspend fun sessionTopUp(owner: SolanaPublicKey): List<TransactionInstruction> {
         val balance = runCatching { rpc.lamports(session.address) }.getOrNull() ?: return emptyList()
         return if (balance < SESSION_MIN) listOf(PledgeProgram.transferSol(owner, session.publicKey, SESSION_FLOAT)) else emptyList()
+    }
+
+    /** Mints an earned badge as a soulbound NFT into the wallet. */
+    fun claimBadge(sender: ActivityResultSender, badge: Int, title: String) = viewModelScope.launch {
+        val owner = ownerKey() ?: return@launch
+        val sig = submitAsOwner(sender, "badge$badge") { listOf(PledgeProgram.claimBadge(owner, badge)) } ?: return@launch
+        record("Badge", sig, "$title minted as a soulbound NFT")
+        done("$title is in your wallet. It can never be sold or moved.")
     }
 
     /** Refill the session key on purpose (one wallet approval), when it shows as low. */

@@ -49,6 +49,11 @@ pub mod pledge {
         instructions::settle::handle_settle(ctx)
     }
 
+    /// Mint the caller's soulbound NFT for an earned badge (one per wallet and badge).
+    pub fn claim_badge(ctx: Context<ClaimBadge>, badge: u8) -> Result<()> {
+        instructions::claim_badge::handle_claim_badge(ctx, badge)
+    }
+
     /// Mint 10,000 test SKR to the caller while they hold less than 5,000.
     pub fn faucet(ctx: Context<Faucet>) -> Result<()> {
         instructions::faucet::handle_faucet(ctx)

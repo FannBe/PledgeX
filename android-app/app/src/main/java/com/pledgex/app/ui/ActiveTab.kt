@@ -51,9 +51,21 @@ fun ActiveTab(s: UiState, a: Actions) {
         s.chainNow >= c.end -> SettleCard(s, c, a)
         else -> {
             DeadlineBanner(s, c)
+            StatsRow(s, c)
             HabitHero(s, c, a)
             StakeCard(s, c, a)
         }
+    }
+}
+
+/** Streaks and the all-time count: what makes tomorrow's clock-in worth keeping. */
+@Composable
+private fun StatsRow(s: UiState, c: Commitment) {
+    val streak = c.currentStreak(s.chainNow)
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        StatTile("Current streak", "$streak", if (streak > 0) Mint else TextLo, if (streak == 1) "day" else "days", Modifier.weight(1f))
+        StatTile("Best streak", "${maxOf(s.profile?.bestStreak ?: 0, streak)}", Gold, "real pledges", Modifier.weight(1f))
+        StatTile("Days kept", "${(s.profile?.kept ?: 0) + c.completedDays}", Cyan, "all time", Modifier.weight(1f))
     }
 }
 

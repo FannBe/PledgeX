@@ -144,5 +144,10 @@ class DevnetE2ETest {
         assertEquals(0, p.realDaysKept)
         assertEquals(stake, p.returned)
         println("profile ${p.started} started, ${p.perfect} perfect, kinds ${p.perfectKinds}")
+
+        // "First Pledge" is earned by any pledge: mint it the way the app does.
+        println("badge  " + send(owner, listOf(owner), listOf(PledgeProgram.claimBadge(owner.publicKey, 0))))
+        val badgeData = account(PledgeProgram.badgeAccount(owner.publicKey, 0).base58())!!
+        assertEquals(1L, ByteBuffer.wrap(badgeData, 64, 8).order(ByteOrder.LITTLE_ENDIAN).long)
     }
 }

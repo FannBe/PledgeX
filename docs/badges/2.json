@@ -1,0 +1,30 @@
+{
+  "name": "PledgeX · 6 AM Club Hero",
+  "symbol": "PLDGX",
+  "description": "Kept every day of a real 6 AM Club pledge, checked by Solana's clock. A soulbound PledgeX badge: it cannot be transferred or sold. Solana devnet.",
+  "image": "https://fannbe.github.io/PledgeX/badges/2.png",
+  "external_url": "https://fannbe.github.io/PledgeX/",
+  "attributes": [
+    {
+      "trait_type": "Badge",
+      "value": "6 AM Club Hero"
+    },
+    {
+      "trait_type": "Transferable",
+      "value": "No"
+    },
+    {
+      "trait_type": "Network",
+      "value": "Solana Devnet"
+    }
+  ],
+  "properties": {
+    "files": [
+      {
+        "uri": "https://fannbe.github.io/PledgeX/badges/2.png",
+        "type": "image/png"
+      }
+    ],
+    "category": "image"
+  }
+}

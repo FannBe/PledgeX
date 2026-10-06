@@ -1,0 +1,30 @@
+{
+  "name": "PledgeX · Digital Detox",
+  "symbol": "PLDGX",
+  "description": "Kept every day of a real screen-detox pledge. A soulbound PledgeX badge: it cannot be transferred or sold. Solana devnet.",
+  "image": "https://fannbe.github.io/PledgeX/badges/3.png",
+  "external_url": "https://fannbe.github.io/PledgeX/",
+  "attributes": [
+    {
+      "trait_type": "Badge",
+      "value": "Digital Detox"
+    },
+    {
+      "trait_type": "Transferable",
+      "value": "No"
+    },
+    {
+      "trait_type": "Network",
+      "value": "Solana Devnet"
+    }
+  ],
+  "properties": {
+    "files": [
+      {
+        "uri": "https://fannbe.github.io/PledgeX/badges/3.png",
+        "type": "image/png"
+      }
+    ],
+    "category": "image"
+  }
+}

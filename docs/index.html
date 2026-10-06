@@ -166,6 +166,11 @@
   .road .card::before { content:""; position:absolute; top: -1px; left: 22px; right: 22px; height: 2px; background: var(--grad); border-radius: 2px; opacity: .8; }
   .road .when { font: 600 11px var(--mono); color: var(--mint); letter-spacing: .12em; }
 
+  .badges { display:grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
+  .badges figure { margin:0; text-align:center; }
+  .badges img { border-radius: 18px; border: 1px solid var(--edge); display:block; }
+  .badges figcaption { color: var(--lo); font-size: 13px; margin-top: 8px; font-family: var(--head); }
+  @media (max-width: 980px) { .badges { grid-template-columns: repeat(3, 1fr); } }
   .stack { display:flex; flex-wrap: wrap; gap: 10px; }
   .stack span { padding: 9px 13px; border-radius: 10px; border: 1px solid var(--edge); background: rgba(9,12,22,.85); font: 600 13px var(--head); color: #dbe6ff; }
 
@@ -296,8 +301,22 @@
       <div class="shot"><div class="device"><img src="screens/explore.jpg" alt="Explore tab: habit catalog" width="540" height="801" loading="lazy"></div><h4>EXPLORE</h4><p>The habit catalog. Every term is shown before your wallet signs.</p></div>
       <div class="shot"><div class="device"><img src="screens/judge-lab.jpg" alt="Judge Lab guided demo" width="540" height="801" loading="lazy"></div><h4>JUDGE LAB</h4><p>A guided six-minute demo, each step ticked off from chain state.</p></div>
       <div class="shot"><div class="device"><img src="screens/ranks.jpg" alt="Ranks tab: leaderboard and live activity" width="540" height="801" loading="lazy"></div><h4>RANKS</h4><p>Leaderboard, totals and live program activity, read from devnet.</p></div>
-      <div class="shot"><div class="device"><img src="screens/vault.jpg" alt="Vault tab: escrow and badges" width="540" height="801" loading="lazy"></div><h4>VAULT</h4><p>Your escrow, lifetime returned and burned, and soulbound badges.</p></div>
+      <div class="shot"><div class="device"><img src="screens/vault.jpg" alt="Vault tab: escrow and badges" width="540" height="801" loading="lazy"></div><h4>VAULT</h4><p>Your escrow, lifetime totals, and soulbound NFT badges you claim into your wallet.</p></div>
       <div class="shot"><div class="device"><img src="screens/settle.jpg" alt="Settle card: refund and burn" width="540" height="801" loading="lazy"></div><h4>SETTLE</h4><p>Kept days back to you, missed days burned, with a share card.</p></div>
+    </div>
+  </section>
+
+  <section class="reveal" id="badges">
+    <div class="kicker">Soulbound badges</div>
+    <h2>Badges you can't buy, sell or fake</h2>
+    <p class="sub">Each badge is a Token-2022 NFT minted by the program itself: non-transferable, supply 1, no mint authority left. It shows in Phantom. Badges and leaderboard rank come only from real pledges (days of an hour or more), so a demo can't farm them.</p>
+    <div class="badges">
+      <figure><img src="badges/0.png" alt="First Pledge badge" width="800" height="800" loading="lazy"><figcaption>First Pledge</figcaption></figure>
+      <figure><img src="badges/1.png" alt="10K Pioneer badge" width="800" height="800" loading="lazy"><figcaption>10K Pioneer</figcaption></figure>
+      <figure><img src="badges/2.png" alt="6 AM Club Hero badge" width="800" height="800" loading="lazy"><figcaption>6 AM Club Hero</figcaption></figure>
+      <figure><img src="badges/3.png" alt="Digital Detox badge" width="800" height="800" loading="lazy"><figcaption>Digital Detox</figcaption></figure>
+      <figure><img src="badges/4.png" alt="Week Streak badge" width="800" height="800" loading="lazy"><figcaption>Week Streak</figcaption></figure>
+      <figure><img src="badges/5.png" alt="Iron Will badge" width="800" height="800" loading="lazy"><figcaption>Iron Will</figcaption></figure>
     </div>
   </section>
 
@@ -329,7 +348,7 @@
       <div class="row"><div class="k">Program</div><div class="v"><a href="https://explorer.solana.com/address/68c1eNdHAfNWJhCWhtqumiqzYyFcDNLkfgwKwdFwFRcd?cluster=devnet"><code>68c1eNdHAfNWJhCWhtqumiqzYyFcDNLkfgwKwdFwFRcd</code></a><button class="copy" data-copy="68c1eNdHAfNWJhCWhtqumiqzYyFcDNLkfgwKwdFwFRcd">copy</button></div></div>
       <div class="row"><div class="k">Test SKR mint</div><div class="v"><a href="https://explorer.solana.com/address/F4L7W4qgFAuU2iyg5ePBENXTHeZyTPor4tJMfhUHqfgQ?cluster=devnet"><code>F4L7W4qgFAuU2iyg5ePBENXTHeZyTPor4tJMfhUHqfgQ</code></a><button class="copy" data-copy="F4L7W4qgFAuU2iyg5ePBENXTHeZyTPor4tJMfhUHqfgQ">copy</button> <span style="color:var(--dim)">9 decimals, no value</span></div></div>
       <div class="row"><div class="k">Mint authority</div><div class="v">The program's faucet PDA <code>7Twns5ha3zR36upXJpSkUo6wsPRMS78byuJECimhkDHL</code>. No person holds a minting key.</div></div>
-      <div class="row"><div class="k">Instructions</div><div class="v"><code>create_commitment</code> <code>clock_in</code> <code>settle</code> <code>faucet</code></div></div>
+      <div class="row"><div class="k">Instructions</div><div class="v"><code>create_commitment</code> <code>clock_in</code> <code>settle</code> <code>claim_badge</code> <code>faucet</code></div></div>
       <div class="row"><div class="k">Accounts</div><div class="v"><code>Commitment [commitment, owner, id]</code> <code>vault [vault, commitment]</code> <code>Profile [profile, owner]</code></div></div>
       <div class="row"><div class="k">Day windows</div><div class="v">Day <i>i</i> is <code>[start + i·day, start + (i+1)·day)</code>, read from the Clock sysvar. A wake-up accepts only the first <code>window</code> seconds of the day; a screen detox only the last.</div></div>
       <div class="row"><div class="k">Auto-settle</div><div class="v">An hourly crank settles any pledge still open an hour after its end. Its key only pays the fee; the refund always goes to the owner.</div></div>
@@ -359,7 +378,7 @@
     <div class="kicker">Next</div>
     <h2>Roadmap</h2>
     <div class="road">
-      <div class="card"><div class="when">NEXT</div><h3>cNFT badges</h3><p>Badges already live on chain in the non-transferable <code>Profile</code>. Next, each one is minted as a soulbound Metaplex Bubblegum cNFT so it shows in any wallet.</p></div>
+      <div class="card"><div class="when">NEXT</div><h3>Compressed badges at scale</h3><p>Badges are already soulbound Token-2022 NFTs. With many users, mint them as Bubblegum cNFTs to cut the cost per badge.</p></div>
       <div class="card"><div class="when">THEN</div><h3>Health Connect</h3><p>Steps from watches and fitness bands through Health Connect.</p></div>
       <div class="card"><div class="when">THEN</div><h3>Mainnet &amp; real SKR</h3><p>The same program on mainnet, with stakes in SKR and an optional stablecoin.</p></div>
       <div class="card"><div class="when">LATER</div><h3>Group pledges</h3><p>Friends and teams pledge together. Misses still burn, so nobody gains from someone else's miss.</p></div>
