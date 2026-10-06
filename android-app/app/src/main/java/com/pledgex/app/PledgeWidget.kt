@@ -37,6 +37,13 @@ class PledgeWidget : AppWidgetProvider() {
     companion object {
         private const val PREFS = "widget"
 
+        /** Asks the launcher to pin the widget; false when the launcher can't. */
+        fun requestPin(context: Context): Boolean {
+            val manager = AppWidgetManager.getInstance(context)
+            if (!manager.isRequestPinAppWidgetSupported) return false
+            return manager.requestPinAppWidget(ComponentName(context, PledgeWidget::class.java), null, null)
+        }
+
         fun push(context: Context, state: WidgetState) {
             val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             val encoded = listOf(state.title, state.day, state.value, state.progress, state.status, state.deadlineMs, state.action, state.done).joinToString("\u0001")

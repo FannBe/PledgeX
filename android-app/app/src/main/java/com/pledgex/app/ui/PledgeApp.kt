@@ -145,6 +145,7 @@ fun PledgeApp(vm: PledgeViewModel, sender: ActivityResultSender, askNotification
 @Composable
 private fun Header(s: UiState, onJudgeLab: () -> Unit, onHelp: () -> Unit, onDisconnect: () -> Unit) {
     val clipboard = LocalClipboardManager.current
+    val context = androidx.compose.ui.platform.LocalContext.current
     var menu by remember { mutableStateOf(false) }
     Row(Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Image(painterResource(R.drawable.app_logo), null, Modifier.size(40.dp))
@@ -173,6 +174,7 @@ private fun Header(s: UiState, onJudgeLab: () -> Unit, onHelp: () -> Unit, onDis
                     )
                     DropdownMenuItem(text = { Text("Copy address") }, onClick = { clipboard.setText(AnnotatedString(s.wallet)); menu = false })
                     DropdownMenuItem(text = { Text("How it works") }, onClick = { onHelp(); menu = false })
+                    DropdownMenuItem(text = { Text("Add widget to home screen") }, onClick = { com.pledgex.app.PledgeWidget.requestPin(context); menu = false })
                     DropdownMenuItem(text = { Text("Disconnect", color = Burn) }, onClick = { onDisconnect(); menu = false })
                 }
             }

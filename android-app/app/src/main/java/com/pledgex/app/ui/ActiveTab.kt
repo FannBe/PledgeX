@@ -143,7 +143,7 @@ private fun HabitHero(s: UiState, c: Commitment, a: Actions) {
     val open = s.chainNow >= c.openFrom(day) && s.chainNow < c.openUntil(day)
     val stepPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { a.vm.setStepPermission(it) }
     val (progress, big, small) = when (c.kind) {
-        Kind.WAKE -> Triple(if (done) 1f else 0f, if (done) "UP" else "—", if (done) "clocked in on time" else "window ${clock(c.windowSec.toLong())}")
+        Kind.WAKE -> Triple(if (done) 1f else 0f, if (done) "UP" else "—", if (done) "clocked in on time" else "window ${humanDuration(c.windowSec.toLong())}")
         Kind.SCREEN -> Triple(
             (s.todaySteps.toFloat() / c.targetSteps).coerceIn(0f, 1f),
             "${s.todaySteps}m", "of ${c.targetSteps} min limit",
@@ -252,8 +252,8 @@ private fun StatusBox(s: UiState, c: Commitment, done: Boolean, goalMet: Boolean
     val (line, sub, color) = when {
         done -> Triple("✓ Day recorded on Solana", "Signed by this phone's session key: it can clock in and nothing else", Mint)
         goalMet && open -> Triple("✓ Goal met · ready to clock in", if (c.kind == Kind.WAKE) "Solana's clock checks you're inside the window" else "One tap, no wallet screen", Mint)
-        c.kind == Kind.WAKE -> Triple("Window: first ${clock(c.windowSec.toLong())} of the day", "Only Solana's clock decides, so it can't be faked", Gold)
-        c.kind == Kind.SCREEN -> Triple("Clock in near the end of the day", "Last ${clock(c.windowSec.toLong())} of each day, if you stayed under the limit", Purple)
+        c.kind == Kind.WAKE -> Triple("Window: the first ${humanDuration(c.windowSec.toLong())} of the day", "Only Solana's clock decides, so it can't be faked", Gold)
+        c.kind == Kind.SCREEN -> Triple("Clock in near the end of the day", "In the last ${humanDuration(c.windowSec.toLong())} of each day, if you stayed under the limit", Purple)
         else -> Triple("Walk to reach today's goal", if (s.demoStepsToday > 0) "Includes ${s.demoStepsToday.fmt()} simulated steps" else "Counted by the phone's hardware step counter", TextLo)
     }
     Column(
@@ -286,8 +286,11 @@ private fun StakeCard(s: UiState, c: Commitment, a: Actions) {
         KeyValue("Days kept", "${c.completedDays} of ${c.totalDays}", Mint)
         KeyValue("Missed so far", if (missed == 0) "none" else "$missed · ${formatSkr(c.dailyStake * missed)} will burn", if (missed == 0) TextHi else Burn)
         KeyValue("Back to you if you keep every day left", "${formatSkr(c.dailyStake * (c.totalDays - missed))} SKR")
-        // The phone key pays the fee of every one-tap clock-in; say how long it lasts.
-        s.sessionActionsLeft?.let { left ->
+        // The phone key pays the fee of every one-tap clock-in; say how long it lasts. A
+        // pledge made with another phone's key clocks in through the wallet instead.
+        if (c.clockInAuthority != s.sessionAddress) {
+            KeyValue("Clock-in on this phone", "through your wallet", TextLo)
+        } else s.sessionActionsLeft?.let { left ->
             KeyValue("One-tap clock-ins left on this phone", if (left > 999) "999+" else "$left", if (left < 20) Amber else TextHi)
             if (left < 20) GhostButton("Refill the phone key (one approval)", busy = "refill" in s.pending, color = Amber) { a.vm.refillSessionKey(a.sender) }
         }

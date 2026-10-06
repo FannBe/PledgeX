@@ -198,9 +198,17 @@ fun short(address: String) = "${address.take(4)}…${address.takeLast(4)}"
 fun clock(seconds: Long): String {
     val s = seconds.coerceAtLeast(0)
     return when {
+        s >= 86_400 -> "%dd %02dh %02dm".format(s / 86_400, s % 86_400 / 3600, s % 3600 / 60)
         s >= 3600 -> "%dh %02dm %02ds".format(s / 3600, s % 3600 / 60, s % 60)
         else -> "%02dm %02ds".format(s / 60, s % 60)
     }
+}
+
+/** "2 hours", "1 hour", "40 seconds", "90 minutes": for rules, not countdowns. */
+fun humanDuration(sec: Long): String = when {
+    sec % 3600 == 0L -> (sec / 3600).let { if (it == 1L) "1 hour" else "$it hours" }
+    sec % 60 == 0L -> (sec / 60).let { if (it == 1L) "1 minute" else "$it minutes" }
+    else -> "$sec seconds"
 }
 
 fun ago(unixSec: Long, nowSec: Long): String {
