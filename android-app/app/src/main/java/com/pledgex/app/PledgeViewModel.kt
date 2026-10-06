@@ -89,6 +89,8 @@ data class UiState(
     val badgesClaimed: Set<Int> = emptySet(),
     /** The first-run introduction has been seen. */
     val onboarded: Boolean = true,
+    /** Set to a new value to fire a confetti burst (a kept day, a perfect settle, a badge). */
+    val celebrate: Long = 0,
 ) {
     val lowSol get() = lamports != null && lamports < MIN_SOL_TO_PLEDGE
     /** One-tap clock-ins the phone key can still pay for (it must stay rent-exempt). */
@@ -515,6 +517,7 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
             else -> "${stepsReported.toLong().fmt()} steps"
         }
         record("Clock-in", sig, "Day ${day + 1} of ${c.totalDays} · $what")
+        celebrate(heavy = false)
         done("Day ${day + 1} recorded on chain.")
     }
 
@@ -537,6 +540,7 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
         val result = SettleResult(c.refund, c.burn, c.completedDays, c.totalDays, sig)
         record("Settle", sig, "Returned ${formatSkr(c.refund)} · burned ${formatSkr(c.burn)} test SKR")
         _state.update { it.copy(lastResult = result, commitment = null) }
+        celebrate(heavy = result.completed == result.total)
         done("Settled. ${formatSkr(c.refund)} test SKR is back in your wallet.")
     }
 
@@ -563,7 +567,19 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
         val owner = ownerKey() ?: return@launch
         val sig = submitAsOwner(sender, "badge$badge") { listOf(PledgeProgram.claimBadge(owner, badge)) } ?: return@launch
         record("Badge", sig, "$title minted as a soulbound NFT")
+        celebrate(heavy = true)
         done("$title is in your wallet. It can never be sold or moved.")
+    }
+
+    /** Confetti on screen and a short buzz in the hand. */
+    private fun celebrate(heavy: Boolean) {
+        _state.update { it.copy(celebrate = System.nanoTime()) }
+        runCatching {
+            val vibrator = getApplication<Application>().getSystemService(android.os.Vibrator::class.java)
+            vibrator?.vibrate(android.os.VibrationEffect.createPredefined(
+                if (heavy) android.os.VibrationEffect.EFFECT_HEAVY_CLICK else android.os.VibrationEffect.EFFECT_CLICK,
+            ))
+        }
     }
 
     /** Refill the session key on purpose (one wallet approval), when it shows as low. */

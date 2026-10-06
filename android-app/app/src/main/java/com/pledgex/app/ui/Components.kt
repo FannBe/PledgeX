@@ -22,6 +22,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -167,13 +169,21 @@ fun IconTile(glyph: Glyph, tint: Color, size: Dp = 46.dp) {
 /** The habit ring: a dim track and a Solana-gradient arc. */
 @Composable
 fun Ring(progress: Float, modifier: Modifier, done: Boolean) {
+    val shown by androidx.compose.animation.core.animateFloatAsState(
+        progress.coerceIn(0f, 1f), androidx.compose.animation.core.tween(900), label = "ring",
+    )
+    val glow by androidx.compose.animation.core.rememberInfiniteTransition(label = "glow").animateFloat(
+        0.25f, 0.6f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(1400),
+            androidx.compose.animation.core.RepeatMode.Reverse), label = "glow",
+    )
     Canvas(modifier) {
+        if (done) drawCircle(Mint.copy(alpha = glow * 0.25f), radius = size.minDimension / 2 + 6.dp.toPx())
         val stroke = 16.dp.toPx()
         val inset = stroke / 2
         val arc = Size(size.width - stroke, size.height - stroke)
         drawArc(Color(0xFF26262B), -90f, 360f, false, Offset(inset, inset), arc, style = Stroke(stroke))
         val brush = if (done) Brush.sweepGradient(listOf(Mint, Cyan, Mint)) else Brush.sweepGradient(listOf(Purple, Mint, Purple))
-        if (progress > 0f) drawArc(brush, -90f, 360f * progress, false, Offset(inset, inset), arc, style = Stroke(stroke, cap = StrokeCap.Round))
+        if (shown > 0f) drawArc(brush, -90f, 360f * shown, false, Offset(inset, inset), arc, style = Stroke(stroke, cap = StrokeCap.Round))
     }
 }
 

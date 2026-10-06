@@ -2,7 +2,19 @@
 
 # PledgeX
 
+[![Android build](https://github.com/FannBe/PledgeX/actions/workflows/build-apk.yml/badge.svg)](https://github.com/FannBe/PledgeX/actions/workflows/build-apk.yml)
+[![Program build](https://github.com/FannBe/PledgeX/actions/workflows/program.yml/badge.svg)](https://github.com/FannBe/PledgeX/actions/workflows/program.yml)
+[![Settle crank](https://github.com/FannBe/PledgeX/actions/workflows/crank.yml/badge.svg)](https://github.com/FannBe/PledgeX/actions/workflows/crank.yml)
+[![Latest APK](https://img.shields.io/github/v/release/FannBe/PledgeX?label=APK)](https://github.com/FannBe/PledgeX/releases/latest)
+
 **Stake on your daily habits. Keep the day, and it comes back. Miss it, and that day's stake burns.**
+
+<p align="center">
+  <img src="docs/screens/active.jpg" width="200" alt="Active tab">
+  <img src="docs/screens/explore.jpg" width="200" alt="Explore tab">
+  <img src="docs/screens/ranks.jpg" width="200" alt="Ranks tab">
+  <img src="docs/screens/vault.jpg" width="200" alt="Vault tab">
+</p>
 
 PledgeX is an Android app and a Solana program. You lock test SKR for a number of days on a daily habit. Each day you keep it, you clock in on chain. After the last day the program returns the days you kept and **burns** the days you missed. Nobody receives a missed stake, including the developers.
 

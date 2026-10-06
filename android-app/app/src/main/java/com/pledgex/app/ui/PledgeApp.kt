@@ -137,6 +137,7 @@ fun PledgeApp(vm: PledgeViewModel, sender: ActivityResultSender, askNotification
         }
     }
     }
+    Confetti(s.celebrate)
     if (judgeLab && s.wallet != null) JudgeLab(s, actions) { judgeLab = false }
     if (help) HowItWorks { help = false }
 }

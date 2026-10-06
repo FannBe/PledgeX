@@ -32,6 +32,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.pledgex.app.ShareCard
 import com.pledgex.app.UiState
 import com.pledgex.app.chain.Commitment
@@ -170,7 +172,16 @@ private fun HabitHero(s: UiState, c: Commitment, a: Actions) {
         BoxWithConstraints {
             val wide = maxWidth > 560.dp
             val ring = @Composable {
-                Box(Modifier.size(210.dp), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier.size(210.dp).semantics(mergeDescendants = true) {
+                        contentDescription = when (c.kind) {
+                            Kind.WAKE -> if (done) "Today kept: up on time" else "Wake-up window today"
+                            Kind.SCREEN -> "${s.todaySteps} of ${c.targetSteps} minutes of screen time today"
+                            else -> "${s.todaySteps} of ${c.targetSteps} steps today"
+                        }
+                    },
+                    contentAlignment = Alignment.Center,
+                ) {
                     Ring(progress, Modifier.size(210.dp), done)
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(if (c.kind == Kind.STEPS) "${(progress * 100).toInt()}%" else big, color = TextHi, fontSize = 42.sp, fontFamily = Grotesk, fontWeight = FontWeight.Bold)
