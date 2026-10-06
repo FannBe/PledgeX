@@ -168,7 +168,7 @@ fun IconTile(glyph: Glyph, tint: Color, size: Dp = 46.dp) {
 
 /** The habit ring: a dim track and a Solana-gradient arc. */
 @Composable
-fun Ring(progress: Float, modifier: Modifier, done: Boolean) {
+fun Ring(progress: Float, modifier: Modifier, done: Boolean, failed: Boolean = false) {
     val shown by androidx.compose.animation.core.animateFloatAsState(
         progress.coerceIn(0f, 1f), androidx.compose.animation.core.tween(900), label = "ring",
     )
@@ -182,7 +182,11 @@ fun Ring(progress: Float, modifier: Modifier, done: Boolean) {
         val inset = stroke / 2
         val arc = Size(size.width - stroke, size.height - stroke)
         drawArc(Color(0xFF26262B), -90f, 360f, false, Offset(inset, inset), arc, style = Stroke(stroke))
-        val brush = if (done) Brush.sweepGradient(listOf(Mint, Cyan, Mint)) else Brush.sweepGradient(listOf(Purple, Mint, Purple))
+        val brush = when {
+            failed -> Brush.sweepGradient(listOf(Burn, Amber, Burn))
+            done -> Brush.sweepGradient(listOf(Mint, Cyan, Mint))
+            else -> Brush.sweepGradient(listOf(Purple, Mint, Purple))
+        }
         if (shown > 0f) drawArc(brush, -90f, 360f * shown, false, Offset(inset, inset), arc, style = Stroke(stroke, cap = StrokeCap.Round))
     }
 }

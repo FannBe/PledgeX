@@ -182,7 +182,7 @@ private fun HabitHero(s: UiState, c: Commitment, a: Actions) {
                     },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Ring(progress, Modifier.size(210.dp), done)
+                    Ring(progress, Modifier.size(210.dp), done, failed = c.kind == Kind.SCREEN && !done && s.todaySteps > c.targetSteps)
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(if (c.kind == Kind.STEPS) "${(progress * 100).toInt()}%" else big, color = TextHi, fontSize = 42.sp, fontFamily = Grotesk, fontWeight = FontWeight.Bold)
                         Text(if (done) "COMPLETE" else "TODAY", color = TextLo, fontSize = 12.sp, letterSpacing = 2.sp)
@@ -252,6 +252,8 @@ private fun StatusBox(s: UiState, c: Commitment, done: Boolean, goalMet: Boolean
     val (line, sub, color) = when {
         done -> Triple("✓ Day recorded on Solana", "Signed by this phone's session key: it can check in and nothing else", Mint)
         goalMet && open -> Triple("✓ Goal met · ready to check in", if (c.kind == Kind.WAKE) "Solana's clock checks you're inside the window" else "One tap, no wallet screen", Mint)
+        c.kind == Kind.SCREEN && s.todaySteps > c.targetSteps ->
+            Triple("Over today's limit", "${s.todaySteps} of ${c.targetSteps} minutes: today can't be kept, tomorrow starts fresh", Burn)
         c.kind == Kind.WAKE -> Triple("Window: the first ${humanDuration(c.windowSec.toLong())} of the day", "Only Solana's clock decides, so it can't be faked", Gold)
         c.kind == Kind.SCREEN -> Triple("Check in near the end of the day", "In the last ${humanDuration(c.windowSec.toLong())} of each day, if you stayed under the limit", Purple)
         else -> Triple("Walk to reach today's goal", if (s.demoStepsToday > 0) "Includes ${s.demoStepsToday.fmt()} simulated steps" else "Counted by the phone's hardware step counter", TextLo)

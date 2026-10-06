@@ -357,6 +357,8 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 when {
                     done -> WidgetState(kindLabel(c.kind), "DAY ${day + 1}/${c.totalDays}", value, 1000, "Day kept ✓", 0, "OPEN", done = true)
+                    c.kind == Kind.SCREEN && s.todaySteps > c.targetSteps ->
+                        WidgetState(kindLabel(c.kind), "DAY ${day + 1}/${c.totalDays}", value, 1000, "Over today's limit", 0)
                     s.chainNow < c.openFrom(day) -> WidgetState(kindLabel(c.kind), "DAY ${day + 1}/${c.totalDays}", value, progress, "Window opens in", toDevice(c.openFrom(day)))
                     open -> WidgetState(kindLabel(c.kind), "DAY ${day + 1}/${c.totalDays}", value, progress,
                         "${formatSkr(c.dailyStake)} SKR at stake · ", toDevice(c.openUntil(day)), if (met) "CHECK IN" else "OPEN")
