@@ -37,10 +37,10 @@ pub mod pledge {
         )
     }
 
-    /// Clock in for one day with that day's value (steps, or screen minutes; 0 for
+    /// Check in for one day with that day's value (steps, or screen minutes; 0 for
     /// wake-up). Signed by the owner wallet or by the device session key.
-    pub fn clock_in(ctx: Context<ClockIn>, day_index: u8, steps_reported: u32) -> Result<()> {
-        instructions::clock_in::handle_clock_in(ctx, day_index, steps_reported)
+    pub fn check_in(ctx: Context<CheckIn>, day_index: u8, steps_reported: u32) -> Result<()> {
+        instructions::check_in::handle_check_in(ctx, day_index, steps_reported)
     }
 
     /// After the last day: refund completed days, burn missed days, close the accounts.

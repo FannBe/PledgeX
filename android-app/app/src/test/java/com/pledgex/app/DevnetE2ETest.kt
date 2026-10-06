@@ -108,14 +108,14 @@ class DevnetE2ETest {
         val id = System.currentTimeMillis()
         val stake = 3_000 * PledgeProgram.UNIT
         println("create " + send(owner, listOf(owner), listOf(
-            // A one-day wake-up pledge: clock-in only in the first 30 s, on Solana's clock.
+            // A one-day wake-up pledge: check-in only in the first 30 s, on Solana's clock.
             PledgeProgram.createCommitment(owner.publicKey, session.publicKey, id, 0, 1, 60, stake, Kind.WAKE, 0, 30),
             PledgeProgram.transferSol(owner.publicKey, session.publicKey, SESSION_FLOAT),
         )))
         val address = PledgeProgram.commitment(owner.publicKey, id).base58()
         var c = Commitment.decode(address, account(address)!!)
         assertEquals(owner.address, c.authority)
-        assertEquals(session.address, c.clockInAuthority)
+        assertEquals(session.address, c.sessionKey)
         assertEquals(stake, c.totalAmount)
         assertEquals(id, c.id)
         assertEquals(Kind.WAKE, c.kind)
@@ -124,10 +124,10 @@ class DevnetE2ETest {
 
         val day = c.dayAt(chainTime())
         println("clock  " + send(session, listOf(session),
-            listOf(PledgeProgram.clockIn(session.publicKey, SolanaPublicKey.from(address), day, 0))))
+            listOf(PledgeProgram.checkIn(session.publicKey, SolanaPublicKey.from(address), day, 0))))
         c = Commitment.decode(address, account(address)!!)
         assertEquals(1, c.completedDays)
-        assertEquals(true, c.clockedIn(0))
+        assertEquals(true, c.checkedIn(0))
 
         while (chainTime() < c.end + 2) Thread.sleep(3000)
         println("settle " + send(session, listOf(session),

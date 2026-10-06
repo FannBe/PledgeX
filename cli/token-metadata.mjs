@@ -8,6 +8,8 @@ import { createSignerFromKeypair, signerIdentity, publicKey, some, none } from "
 import { rpcUrl, SKR_MINT } from "./lib.mjs";
 
 const NAME = "PledgeX Test SKR";
+// Not "SKR": wallets treat a look-alike of a real token's ticker as possible spam and hide it.
+const SYMBOL = "tSKR";
 const URI = "https://fannbe.github.io/PledgeX/token/metadata.json";
 
 const [authorityPath, payerPath = authorityPath, newAuthority] = process.argv.slice(2);
@@ -25,7 +27,7 @@ console.log("before:", current.name, current.uri, "update authority", current.up
 const { signature } = await updateV1(umi, {
   mint,
   authority,
-  data: some({ ...current, name: NAME, uri: URI }),
+  data: some({ ...current, name: NAME, symbol: SYMBOL, uri: URI }),
   newUpdateAuthority: newAuthority ? some(publicKey(newAuthority)) : none(),
 }).sendAndConfirm(umi);
 

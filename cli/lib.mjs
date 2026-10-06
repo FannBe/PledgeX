@@ -80,8 +80,8 @@ export function claimBadgeIx(user, badge) {
   );
 }
 
-export function clockInIx({ signer, commitment, dayIndex, steps }) {
-  return ix([w(signer, true), w(commitment)], Buffer.concat([disc("clock_in"), u8(dayIndex), u32(steps)]));
+export function checkInIx({ signer, commitment, dayIndex, steps }) {
+  return ix([w(signer, true), w(commitment)], Buffer.concat([disc("check_in"), u8(dayIndex), u32(steps)]));
 }
 
 export function settleIx({ caller, user, commitment }) {
@@ -98,7 +98,7 @@ export function decodeCommitment(data) {
   if (!b.subarray(0, 8).equals(ACCOUNT_DISC)) throw new Error("not a Commitment");
   let o = 8;
   const pk = () => { const p = new PublicKey(b.subarray(o, o + 32)); o += 32; return p; };
-  const authority = pk(), clockInAuthority = pk(), tokenMint = pk(), vault = pk();
+  const authority = pk(), sessionKey = pk(), tokenMint = pk(), vault = pk();
   const targetSteps = b.readUInt32LE(o); o += 4;
   const totalDays = b[o++], completedDays = b[o++];
   const daySec = Number(b.readBigUInt64LE(o)); o += 8;
@@ -110,7 +110,7 @@ export function decodeCommitment(data) {
   const id = b.readBigUInt64LE(o); o += 8;
   const kind = b[o++];
   const windowSec = b.readUInt32LE(o);
-  return { authority, clockInAuthority, tokenMint, vault, targetSteps, totalDays, completedDays, daySec, start, totalAmount, settled, bitmap, id, kind, windowSec };
+  return { authority, sessionKey, tokenMint, vault, targetSteps, totalDays, completedDays, daySec, start, totalAmount, settled, bitmap, id, kind, windowSec };
 }
 
 export const PROFILE_DISC = createHash("sha256").update("account:Profile").digest().subarray(0, 8);

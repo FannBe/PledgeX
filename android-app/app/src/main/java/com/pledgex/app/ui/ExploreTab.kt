@@ -93,15 +93,15 @@ fun ExploreTab(s: UiState, a: Actions) {
     GlassCard {
         Overline("How each habit is checked", Cyan)
         Pipeline("Steps", "The phone's hardware step counter. The phone reports the number; the program trusts it.", Mint)
-        Pipeline("6 AM Club", "Solana's own clock. The program only accepts a clock-in in the first hour of the day, so this one can't be faked.", Amber)
-        Pipeline("Screen detox", "Android usage statistics. The phone reports minutes; clock-in opens in the last two hours of the day.", Purple)
+        Pipeline("6 AM Club", "Solana's own clock. The program only accepts a check-in in the first hour of the day, so this one can't be faked.", Amber)
+        Pipeline("Screen detox", "Android usage statistics. The phone reports minutes; check-in opens in the last two hours of the day.", Purple)
     }
     GlassCard {
         Overline("Escrow guarantees", Mint)
         Pipeline("Non-custodial vault", "The stake sits in an account of the program. No team key can move it.", Mint)
         Pipeline("Burn, not profit", "Missed days are destroyed by the token program's burn. Nobody receives them.", Burn)
         Pipeline("Anyone can settle", "After the last day anyone may trigger settle, and the refund only ever goes to you.", Cyan)
-        Pipeline("A key that can only clock in", "Daily clock-ins are signed by a key on this phone, allowed to clock in and nothing else.", Purple)
+        Pipeline("A key that can only check in", "Daily check-ins are signed by a key on this phone, allowed to check in and nothing else.", Purple)
     }
 
     editing?.let { spec -> Configure(s, spec, onCancel = { editing = null }) { a.create(it); editing = null; a.goTo(Tab.Active) } }

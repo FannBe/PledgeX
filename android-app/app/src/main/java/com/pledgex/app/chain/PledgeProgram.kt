@@ -125,10 +125,10 @@ object PledgeProgram {
         )
     }
 
-    fun clockIn(signer: SolanaPublicKey, commitment: SolanaPublicKey, dayIndex: Int, steps: Int) = TransactionInstruction(
+    fun checkIn(signer: SolanaPublicKey, commitment: SolanaPublicKey, dayIndex: Int, steps: Int) = TransactionInstruction(
         PROGRAM_ID,
         listOf(w(signer, true), w(commitment)),
-        discriminator("global", "clock_in") + le(5) { put(dayIndex.toByte()); putInt(steps) },
+        discriminator("global", "check_in") + le(5) { put(dayIndex.toByte()); putInt(steps) },
     )
 
     suspend fun settle(caller: SolanaPublicKey, owner: SolanaPublicKey, commitment: SolanaPublicKey) = TransactionInstruction(
@@ -144,9 +144,9 @@ object PledgeProgram {
 /** What a pledge measures (state.rs `kind`). */
 object Kind {
     const val STEPS = 0
-    /** Screen minutes, a ceiling, clocked in during the last `window` seconds of the day. */
+    /** Screen minutes, a ceiling, checked in during the last `window` seconds of the day. */
     const val SCREEN = 1
-    /** Wake-up, clocked in during the first `window` seconds of the day; chain time decides. */
+    /** Wake-up, checked in during the first `window` seconds of the day; chain time decides. */
     const val WAKE = 2
 }
 
@@ -154,7 +154,7 @@ object Kind {
 data class Commitment(
     val address: String,
     val authority: String,
-    val clockInAuthority: String,
+    val sessionKey: String,
     val targetSteps: Int,
     val totalDays: Int,
     val completedDays: Int,
@@ -168,7 +168,7 @@ data class Commitment(
     val windowSec: Int,
 ) {
     fun started(now: Long) = now >= start
-    /** The part of `day` in which the chain accepts a clock-in. */
+    /** The part of `day` in which the chain accepts a check-in. */
     fun openFrom(day: Int) = if (kind == Kind.SCREEN && windowSec > 0) dayEnd(day) - windowSec else dayStart(day)
     fun openUntil(day: Int) = if (kind == Kind.WAKE && windowSec > 0) dayStart(day) + windowSec else dayEnd(day)
     val end get() = start + totalDays * daySec
@@ -177,14 +177,14 @@ data class Commitment(
     fun dayAt(now: Long): Int = ((now - start).coerceAtLeast(0) / daySec).toInt().coerceAtMost(totalDays)
     fun dayStart(day: Int) = start + day * daySec
     fun dayEnd(day: Int) = start + (day + 1) * daySec
-    fun clockedIn(day: Int) = day in 0 until 64 && (bitmap ushr day) and 1L == 1L
+    fun checkedIn(day: Int) = day in 0 until 64 && (bitmap ushr day) and 1L == 1L
     val dailyStake get() = totalAmount / totalDays
-    /** Kept days in a row up to today (today counts once it is clocked in). */
+    /** Kept days in a row up to today (today counts once it is checked in). */
     fun currentStreak(now: Long): Int {
         var d = dayAt(now).coerceAtMost(totalDays - 1)
-        if (!clockedIn(d)) d -= 1
+        if (!checkedIn(d)) d -= 1
         var n = 0
-        while (d >= 0 && clockedIn(d)) { n++; d-- }
+        while (d >= 0 && checkedIn(d)) { n++; d-- }
         return n
     }
     /** What settle would return now: total x completed / total days, the program's own rounding. */
@@ -198,7 +198,7 @@ data class Commitment(
             require(disc.contentEquals(PledgeProgram.discriminator("account", "Commitment"))) { "not a Commitment" }
             fun key() = SolanaPublicKey(ByteArray(32).also { b.get(it) }).base58()
             val authority = key()
-            val clockIn = key()
+            val checkIn = key()
             key(); key() // mint, vault
             val target = b.int
             val totalDays = b.get().toInt() and 0xff
@@ -212,7 +212,7 @@ data class Commitment(
             val id = b.long
             val kind = b.get().toInt() and 0xff
             val window = b.int
-            return Commitment(address, authority, clockIn, target, totalDays, completed, daySec, start, total, settled, bitmap, id, kind, window)
+            return Commitment(address, authority, checkIn, target, totalDays, completed, daySec, start, total, settled, bitmap, id, kind, window)
         }
     }
 }
@@ -257,12 +257,12 @@ data class Profile(
  * 6000, and that number is all a failed transaction reports.
  */
 enum class PledgeError(val userMessage: String) {
-    TargetNotMet("Today's steps are below your target, so the chain refused the clock-in."),
-    DayAlreadyClockedIn("Today is already clocked in."),
-    InvalidDayWindow("That day's window has closed on chain. Clock in during the day itself."),
+    TargetNotMet("Today's steps are below your target, so the chain refused the check-in."),
+    DayAlreadyCheckedIn("Today is already checked in."),
+    InvalidDayWindow("That day's window has closed on chain. Check in during the day itself."),
     CommitmentNotEnded("The pledge has not ended yet; settle opens after the last day."),
     AlreadySettled("This pledge is already settled."),
-    UnauthorizedClockIn("This device's key is not allowed to clock in for this pledge."),
+    UnauthorizedCheckIn("This device's key is not allowed to check in for this pledge."),
     InvalidTotalDays("Choose between 1 and 64 days."),
     InvalidDuration("A day must last between 1 minute and 7 days."),
     MathOverflow("The amount is too large."),
@@ -271,7 +271,7 @@ enum class PledgeError(val userMessage: String) {
     FaucetBalanceTooHigh("You already hold 5,000 test SKR or more; the faucet refills below that."),
     InvalidKind("Unknown habit kind."),
     InvalidSchedule("That start time or window is not allowed."),
-    LimitExceeded("Today's screen time is over your limit, so this day cannot be clocked in."),
+    LimitExceeded("Today's screen time is over your limit, so this day cannot be checked in."),
     InvalidBadge("There is no such badge."),
     BadgeNotEarned("This badge isn't earned yet. Badges come from real pledges (days of an hour or more).");
 

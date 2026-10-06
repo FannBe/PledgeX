@@ -5,10 +5,10 @@ pub enum PledgeError {
     #[msg("Reported step count is below the daily target.")]
     TargetNotMet,
 
-    #[msg("You have already clocked in for this day.")]
-    DayAlreadyClockedIn,
+    #[msg("You have already checked in for this day.")]
+    DayAlreadyCheckedIn,
 
-    #[msg("The current time does not match this day's clock-in window.")]
+    #[msg("The current time does not match this day's check-in window.")]
     InvalidDayWindow,
 
     #[msg("Commitment duration has not ended yet. Cannot settle early.")]
@@ -17,8 +17,8 @@ pub enum PledgeError {
     #[msg("This commitment has already been settled.")]
     AlreadySettled,
 
-    #[msg("Signer is not authorized to clock in (must be user or local session key).")]
-    UnauthorizedClockIn,
+    #[msg("Signer is not authorized to check in (must be user or local session key).")]
+    UnauthorizedCheckIn,
 
     #[msg("Total days must be between 1 and 64.")]
     InvalidTotalDays,
@@ -44,7 +44,7 @@ pub enum PledgeError {
     #[msg("The start must be within the next two days and the window inside one day.")]
     InvalidSchedule,
 
-    #[msg("Today's value is over your limit, so this day cannot be clocked in.")]
+    #[msg("Today's value is over your limit, so this day cannot be checked in.")]
     LimitExceeded,
 
     #[msg("There is no badge with that number.")]

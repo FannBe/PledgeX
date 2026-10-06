@@ -285,7 +285,7 @@ private fun JudgeLab(s: UiState, a: Actions, onClose: () -> Unit) {
         (s.lamports ?: 0) >= 5_000_000 || c != null,
         (s.skr ?: 0) >= 1_000 * PledgeProgram.UNIT || c != null,
         c != null || r != null,
-        // A day clocked in, or a pledge already over (then only settling is left).
+        // A day checked in, or a pledge already over (then only settling is left).
         c?.let { it.completedDays > 0 || s.chainNow >= it.end } ?: (r != null),
         c == null && r != null,
     )
@@ -312,7 +312,7 @@ private fun JudgeLab(s: UiState, a: Actions, onClose: () -> Unit) {
                     vm.dismissResult(); a.create(HabitSpec("Demo · 3K steps", Kind.STEPS, 3_000, 3, 1_000, demo = true)); onClose()
                 }
             }
-            LabStep(4, "Clock in day 1", done[3], current == 3, "Walk, or add simulated steps on the Active tab, then Clock in. No wallet screen: the phone's session key signs.") {
+            LabStep(4, "Check in day 1", done[3], current == 3, "Walk, or add simulated steps on the Active tab, then Check in. No wallet screen: the phone's session key signs.") {
                 GradientButton("Go to Active") { a.goTo(Tab.Active); onClose() }
             }
             LabStep(5, "Miss day 2, keep day 3, settle", done[4], current == 4, "After six minutes, Settle: kept days come back, missed days burn. Then check Vault and Ranks.") {
@@ -321,7 +321,7 @@ private fun JudgeLab(s: UiState, a: Actions, onClose: () -> Unit) {
             if (current == -1) GhostButton("Start over with a new demo pledge", color = Mint) {
                 vm.dismissResult(); a.create(HabitSpec("Demo · 3K steps", Kind.STEPS, 3_000, 3, 1_000, demo = true)); onClose()
             }
-            Body("Also try the 6 AM Club in demo: clock-in is accepted only in the first 40 s of each 2-minute day, and Solana's clock decides.", TextLo, 13)
+            Body("Also try the 6 AM Club in demo: check-in is accepted only in the first 40 s of each 2-minute day, and Solana's clock decides.", TextLo, 13)
             GhostButton("Lock a demo 6 AM Club pledge", enabled = c == null, color = Gold) {
                 a.create(HabitSpec("Demo · 6 AM Club", Kind.WAKE, 0, 3, 1_000, demo = true)); onClose()
             }
@@ -365,7 +365,7 @@ fun HowItWorks(onClose: () -> Unit) {
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("1. Pick a habit, a number of days and a stake. The stake moves into an escrow account of the PledgeX program on Solana.")
-                Text("2. Each day you keep the habit, tap Clock in. A key kept on this phone signs it; it can clock in and nothing else.")
+                Text("2. Each day you keep the habit, tap Check in. A key kept on this phone signs it; it can check in and nothing else.")
                 Text("3. After the last day, settle: kept days come back to you, missed days are burned. Nobody receives them, not even us.")
                 Text("Honest limits: steps and screen time are reported by your phone and the program trusts them. The 6 AM Club is checked by Solana's own clock. Devnet only, test tokens.", color = TextLo)
             }

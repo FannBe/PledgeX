@@ -10,7 +10,7 @@
     <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false" />
     <!-- Screen-detox pledges: today's screen time ("Usage access", granted in Settings). -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
-    <!-- A reminder before a day's clock-in window closes. -->
+    <!-- A reminder before a day's check-in window closes. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Re-arm the half-hourly step sampler after a reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />

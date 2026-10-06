@@ -12,7 +12,7 @@ import android.os.Build
 
 /**
  * One local reminder per pledge day, so a day is not lost to forgetting: an hour before
- * the clock-in window closes (steps, screen), or when it opens (wake-up). Real-day
+ * the check-in window closes (steps, screen), or when it opens (wake-up). Real-day
  * pledges only; a demo day is shorter than the reminder.
  */
 object Reminders {

@@ -1,6 +1,6 @@
 {
   "name": "PledgeX Test SKR",
-  "symbol": "SKR",
+  "symbol": "tSKR",
   "description": "Test token for PledgeX on Solana devnet. It has no value. Anyone can mint it from the PledgeX program's faucet; stakes for missed days are burned.",
   "image": "https://fannbe.github.io/PledgeX/token/logo.png",
   "external_url": "https://github.com/FannBe/PledgeX",

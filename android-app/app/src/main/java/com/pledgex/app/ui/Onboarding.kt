@@ -42,7 +42,7 @@ private val PAGES = listOf(
     Page(Glyph.Lock, Purple, "01 · PLEDGE", "Put your habit on the line",
         "Pick a habit, a number of days and a stake. The stake goes into an escrow on Solana that nobody can touch, not even us."),
     Page(Glyph.Bolt, Mint, "02 · KEEP THE DAY", "One tap a day",
-        "Walk your steps, wake up by 6, or put the phone down. Then clock in with one tap. A key on this phone signs it, so no wallet popup."),
+        "Walk your steps, wake up by 6, or put the phone down. Then check in with one tap. A key on this phone signs it, so no wallet popup."),
     Page(Glyph.Flame, Burn, "03 · SETTLE", "Kept days back. Missed days burn.",
         "At the end, every day you kept comes back to you. Every day you missed is burned. Nobody profits from it, and that's the point."),
 )

@@ -129,7 +129,7 @@ pub fn handle_settle(ctx: Context<Settle>) -> Result<()> {
     let mut best = 0u8;
     let mut run = 0u8;
     for day in 0..commitment.total_days {
-        if (commitment.clocked_in_bitmap >> day) & 1 == 1 {
+        if (commitment.kept_bitmap >> day) & 1 == 1 {
             run += 1;
             best = best.max(run);
         } else {

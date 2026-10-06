@@ -113,9 +113,9 @@ class LogicTest {
     }
 
     @Test
-    fun bitmapMarksClockedDays() {
+    fun bitmapMarksKeptDays() {
         val c = pledge(UNIT, 5, 2, bitmap = 0b10101)
-        assertTrue(c.clockedIn(0)); assertTrue(!c.clockedIn(1)); assertTrue(c.clockedIn(4))
+        assertTrue(c.checkedIn(0)); assertTrue(!c.checkedIn(1)); assertTrue(c.checkedIn(4))
     }
 
     @Test

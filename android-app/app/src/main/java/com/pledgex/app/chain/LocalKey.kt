@@ -21,7 +21,7 @@ import javax.crypto.spec.GCMParameterSpec
  * with an AES key that never leaves the Android Keystore, so a copy of the app's
  * files alone does not reveal it.
  *
- * Two are used: the SESSION key, which the program allows to clock in (and nothing
+ * Two are used: the SESSION key, which the program allows to check in (and nothing
  * else — it cannot move the stake), and an optional DEMO wallet for people without
  * a Solana wallet app. Both are devnet-only conveniences.
  */

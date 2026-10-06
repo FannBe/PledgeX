@@ -15,7 +15,7 @@ pub const PROFILE_SEED: &[u8] = b"profile";
 pub const BADGE_SEED: &[u8] = b"badge";
 pub const BADGE_AUTH_SEED: &[u8] = b"badge_auth";
 
-/// What a pledge measures, and so how `clock_in`'s reported value and time are checked.
+/// What a pledge measures, and so how `check_in`'s reported value and time are checked.
 pub mod kind {
     /// Steps: value >= target, any time in the day.
     pub const STEPS: u8 = 0;
@@ -32,8 +32,8 @@ pub mod kind {
 pub struct Commitment {
     /// The wallet that staked and receives the refund.
     pub authority: Pubkey,
-    /// Optional device key allowed to call clock_in (and nothing else).
-    pub clock_in_authority: Pubkey,
+    /// Optional device key allowed to call check_in (and nothing else).
+    pub session_key: Pubkey,
     pub token_mint: Pubkey,
     /// PDA token account holding the stake.
     pub vault: Pubkey,
@@ -49,24 +49,24 @@ pub struct Commitment {
     /// Total staked, in base units.
     pub total_amount: u64,
     pub settled: bool,
-    /// Bit i is set when day i was clocked in.
-    pub clocked_in_bitmap: u64,
+    /// Bit i is set when day i was checked in.
+    pub kept_bitmap: u64,
     pub bump: u8,
     pub vault_bump: u8,
     /// The id the commitment PDA was derived from.
     pub commitment_id: u64,
     /// One of `kind::*`.
     pub kind: u8,
-    /// Clock-in window in seconds (see `kind`); 0 means the whole day.
+    /// Check-in window in seconds (see `kind`); 0 means the whole day.
     pub window_sec: u32,
 }
 
 impl Commitment {
     pub const LEN: usize = 8 + // discriminator
-        32 + 32 + 32 + 32 + // authority, clock_in_authority, token_mint, vault
+        32 + 32 + 32 + 32 + // authority, session_key, token_mint, vault
         4 + 1 + 1 + // target_steps, total_days, completed_days
         8 + 8 + 8 + // day_duration_sec, start_timestamp, total_amount
-        1 + 8 + // settled, clocked_in_bitmap
+        1 + 8 + // settled, kept_bitmap
         1 + 1 + // bump, vault_bump
         8 + // commitment_id
         1 + 4 + // kind, window_sec
@@ -119,7 +119,7 @@ pub struct CommitmentCreatedEvent {
 }
 
 #[event]
-pub struct ClockInEvent {
+pub struct CheckInEvent {
     pub commitment: Pubkey,
     pub day_index: u8,
     pub steps_reported: u32,

@@ -15,9 +15,9 @@ pub struct CreateCommitment<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
 
-    /// CHECK: Only its address is stored; it may sign clock_in and nothing else.
+    /// CHECK: Only its address is stored; it may sign check_in and nothing else.
     /// Pass the system program id to have no session key.
-    pub clock_in_authority: UncheckedAccount<'info>,
+    pub session_key: UncheckedAccount<'info>,
 
     #[account(
         init,
@@ -90,10 +90,10 @@ pub fn handle_create_commitment(
     let start = if start_at == 0 { now } else { start_at };
     require!(start >= now && start <= now + MAX_START_DELAY, PledgeError::InvalidSchedule);
 
-    let session = ctx.accounts.clock_in_authority.key();
+    let session = ctx.accounts.session_key.key();
     let commitment = &mut ctx.accounts.commitment;
     commitment.authority = ctx.accounts.user.key();
-    commitment.clock_in_authority = if session == System::id() {
+    commitment.session_key = if session == System::id() {
         Pubkey::default()
     } else {
         session
@@ -107,7 +107,7 @@ pub fn handle_create_commitment(
     commitment.start_timestamp = start;
     commitment.total_amount = amount;
     commitment.settled = false;
-    commitment.clocked_in_bitmap = 0;
+    commitment.kept_bitmap = 0;
     commitment.bump = ctx.bumps.commitment;
     commitment.vault_bump = ctx.bumps.vault;
     commitment.commitment_id = commitment_id;

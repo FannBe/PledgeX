@@ -27,7 +27,7 @@ data class WidgetState(
 /**
  * A 4x2 home-screen widget: today's habit, the value against the goal, and a live
  * countdown (a Chronometer, so it ticks without waking the app) to the window closing.
- * Tapping it opens the app; clocking in stays a deliberate tap inside it.
+ * Tapping it opens the app; checking in stays a deliberate tap inside it.
  */
 class PledgeWidget : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {

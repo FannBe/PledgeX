@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
 
 use crate::errors::PledgeError;
-use crate::state::{kind, ClockInEvent, Commitment};
+use crate::state::{kind, CheckInEvent, Commitment};
 
 #[derive(Accounts)]
-pub struct ClockIn<'info> {
+pub struct CheckIn<'info> {
     /// The owner wallet or the device session key. It also pays the fee.
     #[account(mut)]
     pub signer: Signer<'info>,
@@ -17,17 +17,17 @@ pub struct ClockIn<'info> {
 }
 
 /// The value (steps or screen minutes) is reported by the phone and is NOT verified on
-/// chain. The program enforces who may clock in, which day it is and inside which part of
+/// chain. The program enforces who may check in, which day it is and inside which part of
 /// the day (by chain time), and once per day. Wake-up pledges need no value at all: the
 /// chain's clock alone decides.
-pub fn handle_clock_in(ctx: Context<ClockIn>, day_index: u8, steps_reported: u32) -> Result<()> {
+pub fn handle_check_in(ctx: Context<CheckIn>, day_index: u8, steps_reported: u32) -> Result<()> {
     let commitment = &mut ctx.accounts.commitment;
     let signer_key = ctx.accounts.signer.key();
 
     let is_owner = signer_key == commitment.authority;
-    let is_session_key = commitment.clock_in_authority != Pubkey::default()
-        && signer_key == commitment.clock_in_authority;
-    require!(is_owner || is_session_key, PledgeError::UnauthorizedClockIn);
+    let is_session_key = commitment.session_key != Pubkey::default()
+        && signer_key == commitment.session_key;
+    require!(is_owner || is_session_key, PledgeError::UnauthorizedCheckIn);
 
     match commitment.kind {
         kind::STEPS => require!(steps_reported >= commitment.target_steps, PledgeError::TargetNotMet),
@@ -38,8 +38,8 @@ pub fn handle_clock_in(ctx: Context<ClockIn>, day_index: u8, steps_reported: u32
 
     let day_mask = 1u64 << (day_index as u64);
     require!(
-        (commitment.clocked_in_bitmap & day_mask) == 0,
-        PledgeError::DayAlreadyClockedIn
+        (commitment.kept_bitmap & day_mask) == 0,
+        PledgeError::DayAlreadyCheckedIn
     );
 
     let now = Clock::get()?.unix_timestamp;
@@ -62,13 +62,13 @@ pub fn handle_clock_in(ctx: Context<ClockIn>, day_index: u8, steps_reported: u32
         }
     }
 
-    commitment.clocked_in_bitmap |= day_mask;
+    commitment.kept_bitmap |= day_mask;
     commitment.completed_days = commitment
         .completed_days
         .checked_add(1)
         .ok_or(PledgeError::MathOverflow)?;
 
-    emit!(ClockInEvent {
+    emit!(CheckInEvent {
         commitment: commitment.key(),
         day_index,
         steps_reported,

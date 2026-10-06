@@ -93,14 +93,14 @@ data class UiState(
     val celebrate: Long = 0,
 ) {
     val lowSol get() = lamports != null && lamports < MIN_SOL_TO_PLEDGE
-    /** One-tap clock-ins the phone key can still pay for (it must stay rent-exempt). */
+    /** One-tap check-ins the phone key can still pay for (it must stay rent-exempt). */
     val sessionActionsLeft get() = sessionLamports?.let { ((it - SESSION_RENT_FLOOR) / SESSION_TX_COST).coerceAtLeast(0) }
     val busy get() = pending.isNotEmpty()
 }
 
 /** Enough SOL for a pledge: two accounts' rent (~0.0045, returned at settle), fees and the session key's float. */
 const val MIN_SOL_TO_PLEDGE = 10_000_000L
-/** Lamports the session key receives with a pledge: about 500 clock-ins and settles worth of fees. */
+/** Lamports the session key receives with a pledge: about 500 check-ins and settles worth of fees. */
 const val SESSION_FLOAT = 3_000_000L
 const val SESSION_MIN = 1_000_000L
 const val SESSION_RENT_FLOOR = 890_880L
@@ -233,13 +233,13 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
         val app = getApplication<Application>()
         if (c == null || c.isDemo || now >= c.end) return Reminders.cancel(app)
         val day = c.dayAt(now)
-        val target = if (c.clockedIn(day) || now >= c.openUntil(day)) day + 1 else day
+        val target = if (c.checkedIn(day) || now >= c.openUntil(day)) day + 1 else day
         if (target >= c.totalDays) return Reminders.cancel(app)
         val atChain = if (c.kind == Kind.WAKE) c.openFrom(target) else c.openUntil(target) - 3600
         val text = when (c.kind) {
-            Kind.WAKE -> "Good morning! Clock in before 06:00 to keep day ${target + 1}."
-            Kind.SCREEN -> "Your clock-in window is open until midnight. Keep screen time under ${c.targetSteps} min."
-            else -> "One hour left to reach ${c.targetSteps.fmt()} steps and clock in day ${target + 1}."
+            Kind.WAKE -> "Good morning! Check in before 06:00 to keep day ${target + 1}."
+            Kind.SCREEN -> "Your check-in window is open until midnight. Keep screen time under ${c.targetSteps} min."
+            else -> "One hour left to reach ${c.targetSteps.fmt()} steps and check in day ${target + 1}."
         }
         Reminders.schedule(app, (atChain - clockOffset) * 1000, "PledgeX · ${formatSkr(c.dailyStake)} SKR at stake", text)
     }
@@ -269,7 +269,7 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
                 val (payer, logs) = tx ?: return@mapNotNull null
                 val ix = logs.firstOrNull { it.startsWith("Program log: Instruction: ") }?.removePrefix("Program log: Instruction: ")
                 val action = when (ix) {
-                    "ClockIn" -> "clocked in a day"
+                    "CheckIn" -> "kept a day"
                     "CreateCommitment" -> "locked a new pledge"
                     "Settle" -> "settled a pledge"
                     "Faucet" -> "claimed test SKR"
@@ -348,7 +348,7 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
             s.chainNow >= c.end -> WidgetState(kindLabel(c.kind), "DONE", "Pledge finished", 1000, "Settle to get your kept days back", 0, "SETTLE")
             else -> {
                 val day = c.dayAt(s.chainNow)
-                val done = c.clockedIn(day)
+                val done = c.checkedIn(day)
                 val open = s.chainNow >= c.openFrom(day) && s.chainNow < c.openUntil(day)
                 val (value, progress, met) = when (c.kind) {
                     Kind.WAKE -> Triple(if (done) "Up on time" else "05:00–06:00", if (done) 1000 else 0, open)
@@ -359,7 +359,7 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
                     done -> WidgetState(kindLabel(c.kind), "DAY ${day + 1}/${c.totalDays}", value, 1000, "Day kept ✓", 0, "OPEN", done = true)
                     s.chainNow < c.openFrom(day) -> WidgetState(kindLabel(c.kind), "DAY ${day + 1}/${c.totalDays}", value, progress, "Window opens in", toDevice(c.openFrom(day)))
                     open -> WidgetState(kindLabel(c.kind), "DAY ${day + 1}/${c.totalDays}", value, progress,
-                        "${formatSkr(c.dailyStake)} SKR at stake · ", toDevice(c.openUntil(day)), if (met) "CLOCK IN" else "OPEN")
+                        "${formatSkr(c.dailyStake)} SKR at stake · ", toDevice(c.openUntil(day)), if (met) "CHECK IN" else "OPEN")
                     else -> WidgetState(kindLabel(c.kind), "DAY ${day + 1}/${c.totalDays}", value, progress, "Window closed for today", 0)
                 }
             }
@@ -477,7 +477,7 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
                         owner, session.publicKey, id, spec.target, spec.days, spec.daySec, amount, spec.kind, startAt, spec.windowSec,
                     ),
                 )
-                // The session key pays its own clock-in fees; top it up with the stake.
+                // The session key pays its own check-in fees; top it up with the stake.
                 addAll(sessionTopUp(owner))
             }
         } ?: return@launch
@@ -488,27 +488,27 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
         done(if (startAt == 0L) "Pledge locked on chain. Day 1 starts now." else "Pledge locked on chain. Day 1 starts at $starts.")
     }
 
-    fun clockIn(sender: ActivityResultSender) = viewModelScope.launch {
+    fun checkIn(sender: ActivityResultSender) = viewModelScope.launch {
         val s = _state.value
         val c = s.commitment ?: return@launch
         val day = c.dayAt(s.chainNow)
-        if (!c.started(s.chainNow) || day >= c.totalDays || c.clockedIn(day)) return@launch
-        if (s.chainNow < c.openFrom(day) || s.chainNow >= c.openUntil(day)) return@launch fail("Today's clock-in window is closed.")
+        if (!c.started(s.chainNow) || day >= c.totalDays || c.checkedIn(day)) return@launch
+        if (s.chainNow < c.openFrom(day) || s.chainNow >= c.openUntil(day)) return@launch fail("Today's check-in window is closed.")
         when (c.kind) {
             Kind.STEPS -> if (s.todaySteps < c.targetSteps) return@launch fail("${s.todaySteps.fmt()} of ${c.targetSteps.fmt()} steps so far: keep walking.")
             Kind.SCREEN -> if (s.todaySteps > c.targetSteps) return@launch fail("${s.todaySteps} min of screen time is over your ${c.targetSteps} min limit.")
         }
         val stepsReported = if (c.kind == Kind.WAKE) 0 else s.todaySteps.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
         val sessionBalance = runCatching { rpc.lamports(session.address) }.getOrNull() ?: s.sessionLamports ?: 0
-        val sig = if (c.clockInAuthority == session.address && sessionBalance >= SESSION_FEE_RESERVE) {
-            // No wallet screen: the device key the program accepts for clock-in signs alone.
-            submitLocal("clockin", session, listOf(session)) {
-                listOf(PledgeProgram.clockIn(session.publicKey, SolanaPublicKey.from(c.address), day, stepsReported))
+        val sig = if (c.sessionKey == session.address && sessionBalance >= SESSION_FEE_RESERVE) {
+            // No wallet screen: the device key the program accepts for check-in signs alone.
+            submitLocal("checkin", session, listOf(session)) {
+                listOf(PledgeProgram.checkIn(session.publicKey, SolanaPublicKey.from(c.address), day, stepsReported))
             }
         } else {
             val owner = ownerKey() ?: return@launch
-            submitAsOwner(sender, "clockin") {
-                listOf(PledgeProgram.clockIn(owner, SolanaPublicKey.from(c.address), day, stepsReported))
+            submitAsOwner(sender, "checkin") {
+                listOf(PledgeProgram.checkIn(owner, SolanaPublicKey.from(c.address), day, stepsReported))
             }
         } ?: return@launch
         val what = when (c.kind) {
@@ -516,7 +516,7 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
             Kind.SCREEN -> "$stepsReported min of screen time"
             else -> "${stepsReported.toLong().fmt()} steps"
         }
-        record("Clock-in", sig, "Day ${day + 1} of ${c.totalDays} · $what")
+        record("Check-in", sig, "Day ${day + 1} of ${c.totalDays} · $what")
         celebrate(heavy = false)
         done("Day ${day + 1} recorded on chain.")
     }
@@ -586,8 +586,8 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
     fun refillSessionKey(sender: ActivityResultSender) = viewModelScope.launch {
         val owner = ownerKey() ?: return@launch
         val sig = submitAsOwner(sender, "refill") { listOf(PledgeProgram.transferSol(owner, session.publicKey, SESSION_FLOAT)) } ?: return@launch
-        record("Phone key", sig, "+0.003 SOL for one-tap clock-ins")
-        done("Phone key refilled: about 500 more one-tap clock-ins.")
+        record("Phone key", sig, "+0.003 SOL for one-tap check-ins")
+        done("Phone key refilled: about 500 more one-tap check-ins.")
     }
 
     fun dismissResult() = _state.update { it.copy(lastResult = null) }

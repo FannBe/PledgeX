@@ -1,6 +1,6 @@
 // End-to-end run of the live devnet program, with real transactions. Three pledges run
 // side by side (2 days x 60 s each, one session key):
-//   steps  : refused below target, clocked day 0, refused twice/stranger/early settle
+//   steps  : refused below target, checked in day 0, refused twice/stranger/early settle
 //   wake   : 20 s window at the START of the day — day 0 in time, day 1 late and refused
 //   screen : 20 s window at the END of the day — too early refused, over the limit refused
 // then a third party settles all three (half refunded, half burned, accounts closed) and
@@ -9,7 +9,7 @@ import { Keypair, LAMPORTS_PER_SOL, SystemProgram } from "@solana/web3.js";
 import { getMint, createMint, getOrCreateAssociatedTokenAccount, mintTo, createAssociatedTokenAccountIdempotentInstruction, createTransferCheckedInstruction, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { ComputeBudgetProgram } from "@solana/web3.js";
 import {
-  connection, loadKeypair, faucetIxs, createCommitmentIx, clockInIx, settleIx, commitmentPda,
+  connection, loadKeypair, faucetIxs, createCommitmentIx, checkInIx, settleIx, commitmentPda,
   vaultPda, profilePda, ata, decodeCommitment, decodeProfile, send, chainNow, UNIT, SKR_MINT, KIND,
   claimBadgeIx, badgeMintPda, badgeAccount, TOKEN_2022,
 } from "./lib.mjs";
@@ -28,7 +28,7 @@ async function expectFail(label, code, fn) {
   catch (e) { const s = String(e?.logs?.join("\n") ?? e?.message ?? e); ok(s.includes(code), `${label} refused (${code})`); }
 }
 async function waitUntil(t) { while ((await chainNow(conn)) < t) await sleep(2000); }
-const clock = (c, day, value, signer = session) => send(conn, [clockInIx({ signer: signer.publicKey, commitment: c, dayIndex: day, steps: value })], [signer]);
+const clock = (c, day, value, signer = session) => send(conn, [checkInIx({ signer: signer.publicKey, commitment: c, dayIndex: day, steps: value })], [signer]);
 
 console.log("user", user.publicKey.toBase58());
 await send(conn, [SystemProgram.transfer({ fromPubkey: payer.publicKey, toPubkey: user.publicKey, lamports: 0.06 * LAMPORTS_PER_SOL }),
@@ -69,18 +69,18 @@ const start = decoded[0].start;
 
 // steps
 await expectFail("steps below target", "TargetNotMet", () => clock(steps, 0, 999));
-ok(!!(await clock(steps, 0, 1234)), "steps: day 0 clocked in by the session key");
-await expectFail("steps: second clock-in for day 0", "DayAlreadyClockedIn", () => clock(steps, 0, 1234));
-await expectFail("steps: stranger clock-in", "UnauthorizedClockIn", () => clock(steps, 0, 1234, stranger));
+ok(!!(await clock(steps, 0, 1234)), "steps: day 0 checked in by the session key");
+await expectFail("steps: second check-in for day 0", "DayAlreadyCheckedIn", () => clock(steps, 0, 1234));
+await expectFail("steps: stranger check-in", "UnauthorizedCheckIn", () => clock(steps, 0, 1234, stranger));
 // wake: in time on day 0
-ok(!!(await clock(wake, 0, 0)), "wake: day 0 clocked in inside the first 20 s");
+ok(!!(await clock(wake, 0, 0)), "wake: day 0 checked in inside the first 20 s");
 // screen: too early on day 0
-await expectFail("screen: clock-in before the last 20 s", "InvalidDayWindow", () => clock(screen, 0, 30));
+await expectFail("screen: check-in before the last 20 s", "InvalidDayWindow", () => clock(screen, 0, 30));
 await expectFail("settle before the end", "CommitmentNotEnded", () =>
   send(conn, [settleIx({ caller: stranger.publicKey, user: user.publicKey, commitment: steps })], [stranger]));
 await waitUntil(start + 42);
 await expectFail("screen: 90 minutes against a 60 limit", "LimitExceeded", () => clock(screen, 0, 90));
-ok(!!(await clock(screen, 0, 30)), "screen: day 0 clocked in at 30 minutes, inside the last 20 s");
+ok(!!(await clock(screen, 0, 30)), "screen: day 0 checked in at 30 minutes, inside the last 20 s");
 // wake: late on day 1
 await waitUntil(start + 60 + 25);
 await expectFail("wake: day 1 after the 20 s window", "InvalidDayWindow", () => clock(wake, 1, 0));

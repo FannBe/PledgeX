@@ -231,7 +231,7 @@
         <a class="btn" href="#judges">Six-minute demo</a>
         <a class="btn" href="https://github.com/FannBe/PledgeX">Source</a>
       </div>
-      <div class="proof"><span>Real devnet transactions</span><span>0% protocol fee</span><span>End-to-end tests 24/24</span><span>MIT licensed</span></div>
+      <div class="proof"><span>Real devnet transactions</span><span>0% protocol fee</span><span>26 on-chain checks passing</span><span>MIT licensed</span></div>
     </div>
     <div class="devices" aria-hidden="true">
       <div class="device back"><img src="screens/vault.jpg" alt="" width="540" height="801"></div>
@@ -273,7 +273,7 @@
     <p class="sub">Every step is a real Solana transaction with an Explorer link in the app.</p>
     <div class="grid">
       <div class="card"><span class="num">01 · PLEDGE</span><h3>Lock a stake</h3><p>Choose a habit, a number of days and a stake. <code>create_commitment</code> moves it into a vault owned by the PledgeX program.</p></div>
-      <div class="card"><span class="num">02 · CLOCK IN</span><h3>One tap a day</h3><p>Keep the habit and tap Clock in. A key on your phone signs <code>clock_in</code>, so there is no wallet screen. It can clock in and nothing else.</p></div>
+      <div class="card"><span class="num">02 · CHECK IN</span><h3>One tap a day</h3><p>Keep the habit and tap Check in. A key on your phone signs <code>check_in</code>, so there is no wallet screen. It can check in and nothing else.</p></div>
       <div class="card"><span class="num">03 · SETTLE</span><h3>Kept days back, missed days burned</h3><p>After the last day, <code>settle</code> returns the days you kept and destroys the rest with SPL <code>burn</code>. Both accounts close and their rent comes back to you.</p></div>
     </div>
   </section>
@@ -281,14 +281,14 @@
   <section id="habits" class="reveal">
     <div class="kicker">Habits</div>
     <h2>Three habits the program enforces</h2>
-    <p class="sub">The program refuses a clock-in outside the day's window, below the goal, over the limit, twice in one day, or from any other key.</p>
+    <p class="sub">The program refuses a check-in outside the day's window, below the goal, over the limit, twice in one day, or from any other key.</p>
     <div class="grid">
       <div class="card"><div class="ico" style="color:var(--mint);border-color:rgba(20,241,149,.55)"><svg viewBox="0 0 24 24"><circle cx="13.4" cy="3.4" r="1.6" fill="currentColor"/><path d="M12.7 6.7 11 13.4M7.2 10.6 12 7.7l4.3 3.3M11 13.4 7.9 21.6M11 13.4l3.4 3.9 1 4.3"/></svg></div>
-        <h3>Steps</h3><p>3,000 to 10,000 steps a day from the phone's hardware step counter. Clock in once you reach the goal.</p><span class="tag" style="color:var(--mint);border-color:rgba(20,241,149,.5)">PHONE-REPORTED</span></div>
+        <h3>Steps</h3><p>3,000 to 10,000 steps a day from the phone's hardware step counter. Check in once you reach the goal.</p><span class="tag" style="color:var(--mint);border-color:rgba(20,241,149,.5)">PHONE-REPORTED</span></div>
       <div class="card"><div class="ico" style="color:var(--amber);border-color:rgba(255,159,10,.55)"><svg viewBox="0 0 24 24"><circle cx="12" cy="13.2" r="7.7"/><path d="M12 9.1v4.1l3.1 1.9M3.1 6.5l3.4-3.4M20.9 6.5l-3.4-3.4"/></svg></div>
-        <h3>The 6:00 AM Club</h3><p>Clock in between 05:00 and 06:00. The program only accepts the first hour of each day, so Solana's clock alone decides whether you were up.</p><span class="tag" style="color:var(--gold);border-color:rgba(255,214,10,.5)">VERIFIED ON CHAIN</span></div>
+        <h3>The 6:00 AM Club</h3><p>Check in between 05:00 and 06:00. The program only accepts the first hour of each day, so Solana's clock alone decides whether you were up.</p><span class="tag" style="color:var(--gold);border-color:rgba(255,214,10,.5)">VERIFIED ON CHAIN</span></div>
       <div class="card"><div class="ico" style="color:var(--purple);border-color:rgba(153,69,255,.6)"><svg viewBox="0 0 24 24"><rect x="7.2" y="1.9" width="9.6" height="20.2" rx="2"/><path d="M10.6 19.2h2.8M2.9 2.9l18.2 18.2"/></svg></div>
-        <h3>Screen detox</h3><p>Stay under 1, 2 or 3 hours of screen time, read from Android's usage statistics. Clock in between 22:00 and midnight.</p><span class="tag" style="color:var(--purple);border-color:rgba(153,69,255,.6)">PHONE-REPORTED</span></div>
+        <h3>Screen detox</h3><p>Stay under 1, 2 or 3 hours of screen time, read from Android's usage statistics. Check in between 22:00 and midnight.</p><span class="tag" style="color:var(--purple);border-color:rgba(153,69,255,.6)">PHONE-REPORTED</span></div>
     </div>
   </section>
 
@@ -297,7 +297,7 @@
     <h2>Built for the Seeker</h2>
     <p class="sub">Kotlin and Jetpack Compose on a pitch-black OLED theme with Solana purple-to-mint neon. Four tabs and a Judge Lab. Screenshots are from a Galaxy Tab S7+ on devnet.</p>
     <div class="gallery">
-      <div class="shot"><div class="device"><img src="screens/active.jpg" alt="Active tab: today's habit ring, deadline and stake" width="540" height="801" loading="lazy"></div><h4>ACTIVE</h4><p>Today's ring, the daily deadline, what burns if you miss, and one-tap clock-in.</p></div>
+      <div class="shot"><div class="device"><img src="screens/active.jpg" alt="Active tab: today's habit ring, deadline and stake" width="540" height="801" loading="lazy"></div><h4>ACTIVE</h4><p>Today's ring, the daily deadline, what burns if you miss, and one-tap check-in.</p></div>
       <div class="shot"><div class="device"><img src="screens/explore.jpg" alt="Explore tab: habit catalog" width="540" height="801" loading="lazy"></div><h4>EXPLORE</h4><p>The habit catalog. Every term is shown before your wallet signs.</p></div>
       <div class="shot"><div class="device"><img src="screens/judge-lab.jpg" alt="Judge Lab guided demo" width="540" height="801" loading="lazy"></div><h4>JUDGE LAB</h4><p>A guided six-minute demo, each step ticked off from chain state.</p></div>
       <div class="shot"><div class="device"><img src="screens/ranks.jpg" alt="Ranks tab: leaderboard and live activity" width="540" height="801" loading="lazy"></div><h4>RANKS</h4><p>Leaderboard, totals and live program activity, read from devnet.</p></div>
@@ -329,7 +329,7 @@
       <div class="card"><h3>Streaks</h3><p>Current streak, best streak and days kept all time, right above today's ring.</p></div>
       <div class="card"><h3>Counts in the background</h3><p>The step counter is sampled every half hour, even when the app is closed or the phone restarts.</p></div>
       <div class="card"><h3>Never stuck</h3><p>An hourly crank settles any pledge still open an hour after it ends. The refund always goes to the owner.</p></div>
-      <div class="card"><h3>One tap, no popup</h3><p>The phone's session key signs clock-ins and refills itself inside transactions you already approve.</p></div>
+      <div class="card"><h3>One tap, no popup</h3><p>The phone's session key signs check-ins and refills itself inside transactions you already approve.</p></div>
     </div>
   </section>
 
@@ -341,8 +341,8 @@
       <li><b>Install the APK</b> from the <a href="https://github.com/FannBe/PledgeX/releases/latest">latest release</a>. Tap <b>Use a demo wallet</b>, or <b>Connect wallet</b> with Phantom in Testnet Mode (Settings → Developer Settings).</li>
       <li>Open <b>Judge Lab</b>. Tap <b>Get devnet SOL</b>, then <b>Get 10,000 test SKR</b>, which the program's own faucet mints.</li>
       <li>Tap <b>Lock demo pledge</b>: 3,000 steps a day, 1,000 test SKR, three 2-minute days.</li>
-      <li>On day 1, walk, or tap <b>+1,000 simulated steps</b> (demo only, labelled). Then <b>Clock in</b>. No wallet screen appears, because the phone's session key signs.</li>
-      <li>Let day 2 pass and clock in on day 3. Then tap <b>Settle &amp; claim</b>: two thirds come back and one third burns. Open <b>Vault</b> and <b>Ranks</b>.</li>
+      <li>On day 1, walk, or tap <b>+1,000 simulated steps</b> (demo only, labelled). Then <b>Check in</b>. No wallet screen appears, because the phone's session key signs.</li>
+      <li>Let day 2 pass and check in on day 3. Then tap <b>Settle &amp; claim</b>: two thirds come back and one third burns. Open <b>Vault</b> and <b>Ranks</b>.</li>
     </ol>
     <div class="timer"><span>lock <b>0:00</b></span><span>day 1 <b>0:00–2:00</b></span><span>day 2 <b>2:00–4:00</b></span><span>day 3 <b>4:00–6:00</b></span><span>settle <b>6:00+</b></span></div>
   </section>
@@ -354,14 +354,14 @@
     <div class="flow">
       <div class="node"><b style="color:var(--purple)">Wallet</b><span>Phantom or Solflare via MWA 2.2, or the demo key, signs the faucet claim and the pledge</span></div><div class="arrow">→</div>
       <div class="node"><b style="color:var(--mint)">Escrow</b><span>The <code>Commitment</code> PDA keeps the rules and a day bitmap; its vault PDA holds the stake</span></div><div class="arrow">→</div>
-      <div class="node"><b style="color:var(--cyan)">Session key</b><span>Ed25519 on the phone, sealed by Android Keystore, signs <code>clock_in</code></span></div><div class="arrow">→</div>
+      <div class="node"><b style="color:var(--cyan)">Session key</b><span>Ed25519 on the phone, sealed by Android Keystore, signs <code>check_in</code></span></div><div class="arrow">→</div>
       <div class="node"><b style="color:var(--burn)">Settle</b><span>Refund, SPL <code>burn</code>, close accounts, update <code>Profile</code></span></div>
     </div>
     <div class="card kv">
       <div class="row"><div class="k">Program</div><div class="v"><a href="https://explorer.solana.com/address/68c1eNdHAfNWJhCWhtqumiqzYyFcDNLkfgwKwdFwFRcd?cluster=devnet"><code>68c1eNdHAfNWJhCWhtqumiqzYyFcDNLkfgwKwdFwFRcd</code></a><button class="copy" data-copy="68c1eNdHAfNWJhCWhtqumiqzYyFcDNLkfgwKwdFwFRcd">copy</button></div></div>
       <div class="row"><div class="k">Test SKR mint</div><div class="v"><a href="https://explorer.solana.com/address/F4L7W4qgFAuU2iyg5ePBENXTHeZyTPor4tJMfhUHqfgQ?cluster=devnet"><code>F4L7W4qgFAuU2iyg5ePBENXTHeZyTPor4tJMfhUHqfgQ</code></a><button class="copy" data-copy="F4L7W4qgFAuU2iyg5ePBENXTHeZyTPor4tJMfhUHqfgQ">copy</button> <span style="color:var(--dim)">9 decimals, no value</span></div></div>
       <div class="row"><div class="k">Mint authority</div><div class="v">The program's faucet PDA <code>7Twns5ha3zR36upXJpSkUo6wsPRMS78byuJECimhkDHL</code>. No person holds a minting key.</div></div>
-      <div class="row"><div class="k">Instructions</div><div class="v"><code>create_commitment</code> <code>clock_in</code> <code>settle</code> <code>claim_badge</code> <code>faucet</code></div></div>
+      <div class="row"><div class="k">Instructions</div><div class="v"><code>create_commitment</code> <code>check_in</code> <code>settle</code> <code>claim_badge</code> <code>faucet</code></div></div>
       <div class="row"><div class="k">Accounts</div><div class="v"><code>Commitment [commitment, owner, id]</code> <code>vault [vault, commitment]</code> <code>Profile [profile, owner]</code></div></div>
       <div class="row"><div class="k">Day windows</div><div class="v">Day <i>i</i> is <code>[start + i·day, start + (i+1)·day)</code>, read from the Clock sysvar. A wake-up accepts only the first <code>window</code> seconds of the day; a screen detox only the last.</div></div>
       <div class="row"><div class="k">Auto-settle</div><div class="v">An hourly crank settles any pledge still open an hour after its end. Its key only pays the fee; the refund always goes to the owner.</div></div>
@@ -376,7 +376,7 @@
     <div class="two">
       <div class="card good"><h3>What protects your stake</h3><ul class="ticks">
         <li>The vault is a program account. No team key can withdraw it.</li>
-        <li>The phone's session key can only call <code>clock_in</code>.</li>
+        <li>The phone's session key can only call <code>check_in</code>.</li>
         <li>Anyone may settle, but the refund only ever goes to the owner.</li>
         <li>Burned tokens go to nobody. There is no protocol fee.</li>
         <li>The upgrade authority is held offline. A leaked development key was stripped of every authority before launch.</li></ul></div>
@@ -410,7 +410,7 @@
     <details><summary>Is this real money?</summary><p>No. PledgeX runs on Solana devnet with a test token. The mechanics are real: real transactions, a real escrow and a real burn. The value is not.</p></details>
     <details><summary>Why burn the missed days instead of giving them to someone?</summary><p>If anyone received missed stakes, that someone would gain from your failure, whether the app, other users or a charity you didn't choose. Burning keeps the only incentive yours: keep the day.</p></details>
     <details><summary>Can PledgeX take or freeze my stake?</summary><p>No. The stake sits in a vault owned by the program. The only ways out are the refund to you and the burn, both decided by the rules you saw before signing.</p></details>
-    <details><summary>What if I lose my phone?</summary><p>The session key on the phone can only clock in. It cannot move your stake. After the last day anyone can settle, and the kept days always go to your wallet.</p></details>
+    <details><summary>What if I lose my phone?</summary><p>The session key on the phone can only check in. It cannot move your stake. After the last day anyone can settle, and the kept days always go to your wallet.</p></details>
     <details><summary>Why not verify steps on chain?</summary><p>A chain cannot see your legs. Steps and screen time come from the phone, and we say so. The 6 AM Club is the one habit the chain checks by itself, by its own clock.</p></details>
   </section>
 

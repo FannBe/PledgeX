@@ -15,7 +15,7 @@ data class HabitSpec(
 ) {
     val daySec get() = if (demo) DEMO_DAY_SEC else 86_400L
 
-    /** Seconds of each day in which the chain accepts a clock-in (0 = all day). */
+    /** Seconds of each day in which the chain accepts a check-in (0 = all day). */
     val windowSec: Int
         get() = when (kind) {
             Kind.WAKE -> if (demo) 40 else 3_600 // 05:00–06:00
@@ -40,8 +40,8 @@ data class HabitSpec(
 
     val rule: String
         get() = when (kind) {
-            Kind.WAKE -> if (demo) "Clock in within the first 40 s of each 2-minute day" else "Clock in between 05:00 and 06:00 every day"
-            Kind.SCREEN -> "Under ${target.fmt()} min of screen time" + if (demo) ", clock in in the last 40 s of each day" else ", clock in 22:00–24:00"
+            Kind.WAKE -> if (demo) "Check in within the first 40 s of each 2-minute day" else "Check in between 05:00 and 06:00 every day"
+            Kind.SCREEN -> "Under ${target.fmt()} min of screen time" + if (demo) ", check in in the last 40 s of each day" else ", check in 22:00–24:00"
             else -> "${target.fmt()} steps a day"
         }
 
@@ -56,7 +56,7 @@ data class Preset(val spec: HabitSpec, val subtitle: String, val source: String)
 val PRESETS = listOf(
     Preset(HabitSpec("10K Steps Daily", Kind.STEPS, 10_000, 7, 1_000, demo = false), "Walk 10,000 steps every day", "Hardware step counter"),
     Preset(HabitSpec("5K Steps Starter", Kind.STEPS, 5_000, 3, 500, demo = false), "Three days to start the habit", "Hardware step counter"),
-    Preset(HabitSpec("The 6:00 AM Club", Kind.WAKE, 0, 7, 2_500, demo = false), "Clock in between 05:00 and 06:00", "Solana's clock — checked on chain"),
+    Preset(HabitSpec("The 6:00 AM Club", Kind.WAKE, 0, 7, 2_500, demo = false), "Check in between 05:00 and 06:00", "Solana's clock — checked on chain"),
     Preset(HabitSpec("Screen Detox (<2h)", Kind.SCREEN, 120, 7, 1_500, demo = false), "Under 2 hours of screen time a day", "Android usage statistics"),
 )
 
