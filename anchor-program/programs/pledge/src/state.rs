@@ -90,11 +90,18 @@ pub struct Profile {
     /// Bit k set once a pledge of kind k was settled perfect.
     pub perfect_kinds: u8,
     pub bump: u8,
+    /// Days kept in REAL pledges (days of an hour or longer). Ranks sort on this, and
+    /// badges (perfect pledges, streaks) only count real pledges: demo days of a minute
+    /// would let anyone farm them in minutes.
+    pub real_days_kept: u32,
 }
 
 impl Profile {
-    pub const LEN: usize = 8 + 32 + 4 * 5 + 8 * 3 + 1 + 1 + 1 + 32; // + reserved
+    pub const LEN: usize = 8 + 32 + 4 * 5 + 8 * 3 + 1 + 1 + 1 + 4 + 28; // + reserved (unchanged total: 119)
 }
+
+/** A day shorter than this is a demo day: it moves money but earns no badges or rank. */
+pub const MIN_REAL_DAY_SEC: u64 = 3_600;
 
 #[event]
 pub struct CommitmentCreatedEvent {

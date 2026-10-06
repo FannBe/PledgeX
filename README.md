@@ -59,6 +59,8 @@ wallet ─────────────────────── fau
 - **Session key.** At creation the owner names a key kept on the phone (Ed25519, its seed encrypted with an Android Keystore AES key) as `clock_in_authority`, and sends it 0.003 SOL for fees. That key can call `clock_in` and nothing else. It cannot move the stake, so daily clock-ins need no wallet screen. It also pays the fee for `settle`, which anyone may call and which pays only the owner.
 - **Settle** refunds `total × kept / days`, burns the exact remainder (the vault always ends at zero), then closes the vault and the commitment. Both rents go back to the owner.
 - **The program refuses** a step count below the target, screen time over the limit, a second clock-in for the same day, a clock-in outside the day's window (including the 6 AM and late-evening windows), a clock-in signed by any other key, and settling before the end.
+- **Auto-settle.** A crank (`cli/crank.mjs`, run hourly by GitHub Actions) settles every pledge still open an hour after its last day ends, so no stake waits on an owner who forgot. Its key only pays fees.
+- **Integrity.** Stakes are in test SKR only (the mint is fixed in the program). Demo pledges (days under an hour) move the money but earn no rank or badges, so they cannot be farmed; the leaderboard sorts by *real* days kept.
 - **Profile.** `create_commitment` creates the owner's `Profile` when it is missing; `settle` updates it with days kept and missed, the amounts returned and burned, perfect pledges per habit, and the best streak. Badges and ranks are read from it.
 
 ### Honest limits
@@ -66,6 +68,7 @@ wallet ─────────────────────── fau
 - **Steps and screen time come from the phone.** The program checks who clocks in, when, and that each day counts once. It cannot verify the number itself. Only the 6 AM Club is checked entirely on chain.
 - The hardware counter counts since boot. The app stores a per-day baseline and carries steps over a reboot. Steps between the last time the app saw the counter and the start of a new day count toward the new day.
 - Devnet only. Test SKR has no value and is not the real SKR token.
+- The faucet refills any wallet holding under 5,000 test SKR, so a determined user can farm test tokens by moving them away. That is acceptable for a valueless test token.
 - **Gas sponsor.** The public devnet airdrop is often down or rate-limited. When it fails, the release APK falls back to a bundled devnet-only key that sends an empty wallet 0.015 SOL, enough for one pledge. That key holds only a little devnet SOL and has no authority over the program or the token. Builds without `sponsor.seed` in `local.properties` skip this step.
 
 ## Roadmap
@@ -93,6 +96,9 @@ cd anchor-program && anchor build --no-idl
 # End-to-end on the live devnet program: faucet, create, session-key clock-in,
 # refused double/stranger/early calls, settle by a third party (refund + burn)
 npm install && node cli/e2e-devnet.mjs path/to/funded-keypair.json
+
+# Settle every pledge that ended over an hour ago (what the hourly workflow runs)
+node cli/crank.mjs --dry-run
 
 # Android (JDK 17, Android SDK 37)
 cd android-app && ./gradlew assembleDebug

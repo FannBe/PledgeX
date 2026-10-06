@@ -206,6 +206,8 @@ data class Profile(
     val burned: Long,
     val bestStreak: Int,
     val perfectKinds: Int,
+    /** Days kept in real pledges (days of an hour or more): ranks and badges use these. */
+    val realDaysKept: Int,
 ) {
     val successRate get() = if (kept + missed == 0) null else kept.toDouble() / (kept + missed)
     fun perfectIn(kind: Int) = (perfectKinds shr kind) and 1 == 1
@@ -219,6 +221,7 @@ data class Profile(
             return Profile(
                 address, authority, b.int, b.int, b.int, b.int, b.int, b.long, b.long, b.long,
                 b.get().toInt() and 0xff, b.get().toInt() and 0xff,
+                b.get().let { b.int }, // skip the bump, then real_days_kept
             )
         }
     }

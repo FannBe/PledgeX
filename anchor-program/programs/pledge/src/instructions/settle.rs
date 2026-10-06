@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Burn, CloseAccount, Mint, Token, TokenAccount, Transfer};
 
 use crate::errors::PledgeError;
-use crate::state::{Commitment, Profile, SettledEvent, PROFILE_SEED, VAULT_SEED};
+use crate::state::{Commitment, Profile, SettledEvent, MIN_REAL_DAY_SEC, PROFILE_SEED, VAULT_SEED};
 
 #[derive(Accounts)]
 pub struct Settle<'info> {
@@ -148,10 +148,14 @@ pub fn handle_settle(ctx: Context<Settle>) -> Result<()> {
     profile.days_missed = profile.days_missed.saturating_add(missed);
     profile.total_returned = profile.total_returned.saturating_add(refund_amount);
     profile.total_burned = profile.total_burned.saturating_add(burn_amount);
-    profile.best_streak = profile.best_streak.max(best);
-    if missed == 0 {
-        profile.perfect_pledges = profile.perfect_pledges.saturating_add(1);
-        profile.perfect_kinds |= 1u8 << commitment.kind.min(7);
+    // Badges and rank only from real days; a demo pledge still moves the money.
+    if commitment.day_duration_sec >= MIN_REAL_DAY_SEC {
+        profile.real_days_kept = profile.real_days_kept.saturating_add(kept);
+        profile.best_streak = profile.best_streak.max(best);
+        if missed == 0 {
+            profile.perfect_pledges = profile.perfect_pledges.saturating_add(1);
+            profile.perfect_kinds |= 1u8 << commitment.kind.min(7);
+        }
     }
 
     emit!(SettledEvent {

@@ -52,7 +52,7 @@ fun ActiveTab(s: UiState, a: Actions) {
         else -> {
             DeadlineBanner(s, c)
             HabitHero(s, c, a)
-            StakeCard(s, c)
+            StakeCard(s, c, a)
         }
     }
 }
@@ -243,7 +243,7 @@ private fun StatusBox(s: UiState, c: Commitment, done: Boolean, goalMet: Boolean
 }
 
 @Composable
-private fun StakeCard(s: UiState, c: Commitment) {
+private fun StakeCard(s: UiState, c: Commitment, a: Actions) {
     val today = c.dayAt(s.chainNow)
     val open = openUrl()
     GlassCard {
@@ -263,6 +263,11 @@ private fun StakeCard(s: UiState, c: Commitment) {
         KeyValue("Days kept", "${c.completedDays} of ${c.totalDays}", Mint)
         KeyValue("Missed so far", if (missed == 0) "none" else "$missed · ${formatSkr(c.dailyStake * missed)} will burn", if (missed == 0) TextHi else Burn)
         KeyValue("Back to you if you keep every day left", "${formatSkr(c.dailyStake * (c.totalDays - missed))} SKR")
+        // The phone key pays the fee of every one-tap clock-in; say how long it lasts.
+        s.sessionActionsLeft?.let { left ->
+            KeyValue("One-tap clock-ins left on this phone", if (left > 999) "999+" else "$left", if (left < 20) Amber else TextHi)
+            if (left < 20) GhostButton("Refill the phone key (one approval)", busy = "refill" in s.pending, color = Amber) { a.vm.refillSessionKey(a.sender) }
+        }
         TextButton(onClick = { open(explorerAddress(c.address)) }) { Text("View the escrow account on Solana Explorer ↗", color = Cyan, fontSize = 13.sp) }
     }
 }

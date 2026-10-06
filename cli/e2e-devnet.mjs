@@ -6,7 +6,7 @@
 // then a third party settles all three (half refunded, half burned, accounts closed) and
 // the owner's Profile adds up. Usage: node cli/e2e-devnet.mjs [payer-keypair.json]
 import { Keypair, LAMPORTS_PER_SOL, SystemProgram } from "@solana/web3.js";
-import { getMint } from "@solana/spl-token";
+import { getMint, createMint, getOrCreateAssociatedTokenAccount, mintTo } from "@solana/spl-token";
 import {
   connection, loadKeypair, faucetIxs, createCommitmentIx, clockInIx, settleIx, commitmentPda,
   vaultPda, profilePda, ata, decodeCommitment, decodeProfile, send, chainNow, UNIT, SKR_MINT, KIND,
@@ -37,6 +37,16 @@ const now = await chainNow(conn);
 await expectFail("a start three days ahead", "InvalidSchedule", () => send(conn, [createCommitmentIx({
   user: user.publicKey, session: session.publicKey, id: 1n, targetSteps: 1, totalDays: 1, daySec: 60, amount: UNIT, startAt: now + 3 * 86400,
 })], [user]));
+
+// Stakes are test SKR only: a home-made token cannot build a record.
+const fake = await createMint(conn, payer, payer.publicKey, null, 9);
+const fakeAta = await getOrCreateAssociatedTokenAccount(conn, payer, fake, user.publicKey);
+await mintTo(conn, payer, fake, fakeAta.address, payer, 1_000n * UNIT);
+{
+  const ix = createCommitmentIx({ user: user.publicKey, session: session.publicKey, id: 7n, targetSteps: 1, totalDays: 1, daySec: 60, amount: UNIT });
+  ix.keys[5].pubkey = fakeAta.address; ix.keys[6].pubkey = fake; // user token account, mint
+  await expectFail("a stake in another token", "ConstraintAddress", () => send(conn, [ix], [user]));
+}
 
 const base = BigInt(Date.now());
 const stake = 1_000n * UNIT;
@@ -84,8 +94,10 @@ const closed = await Promise.all([steps, wake, screen].flatMap((c) => [c, vaultP
 ok(closed.every((a) => a === null), "all commitments and vaults closed");
 
 const p = decodeProfile((await conn.getAccountInfo(profilePda(user.publicKey))).data);
-ok(p.started === 3 && p.settled === 3 && p.kept === 3 && p.missed === 3 && p.perfect === 0 && p.bestStreak === 1,
-  `profile: started ${p.started}, settled ${p.settled}, kept ${p.kept}, missed ${p.missed}, perfect ${p.perfect}, streak ${p.bestStreak}`);
+ok(p.started === 3 && p.settled === 3 && p.kept === 3 && p.missed === 3,
+  `profile: started ${p.started}, settled ${p.settled}, kept ${p.kept}, missed ${p.missed}`);
+ok(p.realDaysKept === 0 && p.bestStreak === 0 && p.perfect === 0,
+  "demo days (60 s) move the money but earn no rank or badges");
 ok(p.returned === 1_500n * UNIT && p.burned === 1_500n * UNIT && p.staked === 3_000n * UNIT, "profile totals: staked 3,000, returned 1,500, burned 1,500");
 
 await expectFail("faucet for a wallet holding 8,500", "FaucetBalanceTooHigh", () => send(conn, faucetIxs(user.publicKey), [user]));

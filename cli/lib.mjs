@@ -109,7 +109,7 @@ export function decodeProfile(data) {
   const big = () => { const v = b.readBigUInt64LE(o); o += 8; return v; };
   const started = n(), settled = n(), perfect = n(), kept = n(), missed = n();
   const staked = big(), returned = big(), burned = big();
-  return { authority: new PublicKey(b.subarray(8, 40)), started, settled, perfect, kept, missed, staked, returned, burned, bestStreak: b[o], perfectKinds: b[o + 1] };
+  return { authority: new PublicKey(b.subarray(8, 40)), started, settled, perfect, kept, missed, staked, returned, burned, bestStreak: b[o], perfectKinds: b[o + 1], realDaysKept: b.readUInt32LE(o + 3) };
 }
 
 export async function send(conn, ixs, signers, feePayer = signers[0]) {

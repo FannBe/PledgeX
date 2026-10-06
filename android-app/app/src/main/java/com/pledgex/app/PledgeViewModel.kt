@@ -18,6 +18,7 @@ import com.pledgex.app.chain.SolanaRpc
 import com.pledgex.app.chain.signLocally
 import com.pledgex.app.steps.ScreenTime
 import com.pledgex.app.steps.StepCounter
+import com.pledgex.app.steps.StepSampler
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 import com.solana.mobilewalletadapter.clientlib.ConnectionIdentity
 import com.solana.mobilewalletadapter.clientlib.MobileWalletAdapter
@@ -86,6 +87,8 @@ data class UiState(
     val ranks: Ranks? = null,
 ) {
     val lowSol get() = lamports != null && lamports < MIN_SOL_TO_PLEDGE
+    /** One-tap clock-ins the phone key can still pay for (it must stay rent-exempt). */
+    val sessionActionsLeft get() = sessionLamports?.let { ((it - SESSION_RENT_FLOOR) / SESSION_TX_COST).coerceAtLeast(0) }
     val busy get() = pending.isNotEmpty()
 }
 
@@ -94,6 +97,8 @@ const val MIN_SOL_TO_PLEDGE = 10_000_000L
 /** Lamports the session key receives with a pledge: about 500 clock-ins and settles worth of fees. */
 const val SESSION_FLOAT = 3_000_000L
 const val SESSION_MIN = 1_000_000L
+const val SESSION_RENT_FLOOR = 890_880L
+const val SESSION_TX_COST = 5_200L
 
 private class AccountSwitched(val account: String) : Exception("wallet switched to $account")
 /** The person came back from the wallet without an answer: they cancelled or backed out. */
@@ -191,6 +196,19 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
         if (_state.value.wallet != wallet) return // switched while reading
         _state.update { it.copy(lamports = lamports, skr = skr, commitment = commitment, profile = profile, loaded = true) }
         scheduleReminder(commitment, chain)
+        followSteps(commitment)
+    }
+
+    private var followed: String? = null
+
+    /** Background step samples for a real steps pledge; nothing for demo days or other habits. */
+    private fun followSteps(c: Commitment?) {
+        val app = getApplication<Application>()
+        val target = c?.takeIf { it.kind == Kind.STEPS && !it.isDemo }
+        if (target?.address == followed) return
+        followed = target?.address
+        if (target == null) StepSampler.stop(app)
+        else StepSampler.follow(app, target.address, target.start, target.daySec, target.totalDays, clockOffset)
     }
 
     /** A notification for today's window (real-day pledges): when it opens for wake-up, an hour before it closes otherwise. */
@@ -219,7 +237,7 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
             val program = PledgeProgram.PROGRAM_ID.base58()
             val profiles = rpc.programAccounts(program, PledgeProgram.PROFILE_LEN)
                 .mapNotNull { (a, d) -> runCatching { Profile.decode(a, d) }.getOrNull() }
-                .sortedWith(compareByDescending<Profile> { it.kept }.thenByDescending { it.perfect }.thenBy { it.missed })
+                .sortedWith(compareByDescending<Profile> { it.realDaysKept }.thenByDescending { it.perfect }.thenByDescending { it.kept }.thenBy { it.missed })
             val open = rpc.programAccounts(program, PledgeProgram.COMMITMENT_LEN)
                 .mapNotNull { (a, d) -> runCatching { Commitment.decode(a, d) }.getOrNull() }.filter { !it.settled }
             val kept = profiles.sumOf { it.kept }
@@ -264,6 +282,11 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
             val data = rpc.accountData(address)
             if (data != null) return Commitment.decode(address, data).takeUnless { it.settled }
             prefs.edit().remove(key).apply()
+            // Gone without this app settling it: the hourly crank settled it after the end.
+            runCatching { rpc.signatures(address, 1).firstOrNull() }.getOrNull()?.let { (sig, _) ->
+                record("Settle", sig, "Settled automatically after the last day")
+                _state.update { it.copy(message = "Your pledge ended and was settled automatically. Kept days are back in your wallet.") }
+            }
         }
         val found = rpc.programAccounts(
             PledgeProgram.PROGRAM_ID.base58(), PledgeProgram.COMMITMENT_LEN, 8, wallet,
@@ -385,7 +408,7 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
     /** 10,000 test SKR minted by the program itself. */
     fun getTestSkr(sender: ActivityResultSender) = viewModelScope.launch {
         val owner = ownerKey() ?: return@launch
-        val sig = submitAsOwner(sender, "faucet") { PledgeProgram.faucet(owner) } ?: return@launch
+        val sig = submitAsOwner(sender, "faucet") { PledgeProgram.faucet(owner) + sessionTopUp(owner) } ?: return@launch
         record("Test SKR", sig, "+10,000 test SKR from the program faucet")
         done("10,000 test SKR added.")
     }
@@ -407,9 +430,7 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
                     ),
                 )
                 // The session key pays its own clock-in fees; top it up with the stake.
-                if ((rpc.lamports(session.address)) < SESSION_MIN) {
-                    add(PledgeProgram.transferSol(owner, session.publicKey, SESSION_FLOAT))
-                }
+                addAll(sessionTopUp(owner))
             }
         } ?: return@launch
         prefs.edit().putString("commitment_${owner.base58()}", PledgeProgram.commitment(owner, id).base58()).apply()
@@ -480,6 +501,23 @@ class PledgeViewModel(app: Application) : AndroidViewModel(app) {
         if (!c.isDemo || c.kind != Kind.STEPS) return
         steps.addDemoSteps(c.address, c.dayAt(s.chainNow), amount)
         recomputeSteps()
+    }
+
+    /**
+     * A transfer that refills the phone's session key when it runs low, added to a
+     * transaction the wallet signs anyway, so it never costs an extra approval.
+     */
+    private suspend fun sessionTopUp(owner: SolanaPublicKey): List<TransactionInstruction> {
+        val balance = runCatching { rpc.lamports(session.address) }.getOrNull() ?: return emptyList()
+        return if (balance < SESSION_MIN) listOf(PledgeProgram.transferSol(owner, session.publicKey, SESSION_FLOAT)) else emptyList()
+    }
+
+    /** Refill the session key on purpose (one wallet approval), when it shows as low. */
+    fun refillSessionKey(sender: ActivityResultSender) = viewModelScope.launch {
+        val owner = ownerKey() ?: return@launch
+        val sig = submitAsOwner(sender, "refill") { listOf(PledgeProgram.transferSol(owner, session.publicKey, SESSION_FLOAT)) } ?: return@launch
+        record("Phone key", sig, "+0.003 SOL for one-tap clock-ins")
+        done("Phone key refilled: about 500 more one-tap clock-ins.")
     }
 
     fun dismissResult() = _state.update { it.copy(lastResult = null) }

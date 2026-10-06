@@ -226,7 +226,7 @@
         <a class="btn" href="#judges">Six-minute demo</a>
         <a class="btn" href="https://github.com/FannBe/PledgeX">Source</a>
       </div>
-      <div class="proof"><span>Real devnet transactions</span><span>0% protocol fee</span><span>End-to-end tests 22/22</span><span>MIT licensed</span></div>
+      <div class="proof"><span>Real devnet transactions</span><span>0% protocol fee</span><span>End-to-end tests 24/24</span><span>MIT licensed</span></div>
     </div>
     <div class="devices" aria-hidden="true">
       <div class="device back"><img src="screens/vault.jpg" alt="" width="540" height="801"></div>
@@ -332,6 +332,8 @@
       <div class="row"><div class="k">Instructions</div><div class="v"><code>create_commitment</code> <code>clock_in</code> <code>settle</code> <code>faucet</code></div></div>
       <div class="row"><div class="k">Accounts</div><div class="v"><code>Commitment [commitment, owner, id]</code> <code>vault [vault, commitment]</code> <code>Profile [profile, owner]</code></div></div>
       <div class="row"><div class="k">Day windows</div><div class="v">Day <i>i</i> is <code>[start + i·day, start + (i+1)·day)</code>, read from the Clock sysvar. A wake-up accepts only the first <code>window</code> seconds of the day; a screen detox only the last.</div></div>
+      <div class="row"><div class="k">Auto-settle</div><div class="v">An hourly crank settles any pledge still open an hour after its end. Its key only pays the fee; the refund always goes to the owner.</div></div>
+      <div class="row"><div class="k">Integrity</div><div class="v">Stakes are test SKR only. Demo pledges (days under an hour) move the money but earn no rank or badges, so they can't be farmed.</div></div>
       <div class="row"><div class="k">Settle math</div><div class="v">refund = stake × kept ÷ days. The burn is the exact remainder, so the vault always closes at zero.</div></div>
     </div>
   </section>

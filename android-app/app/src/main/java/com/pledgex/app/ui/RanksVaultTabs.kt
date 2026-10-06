@@ -59,7 +59,7 @@ fun RanksTab(s: UiState, a: Actions) {
         StatTile("Burned forever", formatSkr(r.totalBurned), Burn, "missed days", Modifier.weight(1f))
         StatTile("Success rate", r.successRate?.let { "%.1f%%".format(it * 100) } ?: "—", Cyan, "days kept", Modifier.weight(1f))
     }
-    Overline("Leaderboard · by days kept")
+    Overline("Leaderboard · by real days kept")
     if (r.profiles.isEmpty()) GlassCard { Body("Nobody has a record yet. Settle a pledge to be the first.") }
     else GlassCard(padding = 0.dp) {
         r.profiles.take(20).forEachIndexed { i, p ->
@@ -109,7 +109,7 @@ private fun LeaderRow(rank: Int, p: Profile, me: Boolean, onClick: () -> Unit) {
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(short(p.authority) + if (me) "  (you)" else "", color = TextHi, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-            Text("${p.kept} days kept · ${p.perfect} perfect · ${formatSkr(p.burned)} burned", color = TextLo, fontSize = 12.sp)
+            Text("${p.realDaysKept} real days · ${p.kept - p.realDaysKept} demo · ${p.perfect} perfect · ${formatSkr(p.burned)} burned", color = TextLo, fontSize = 12.sp)
         }
         Pill("${p.bestStreak}d STREAK", color = if (p.bestStreak >= 7) Gold else Cyan)
     }
@@ -165,7 +165,7 @@ fun VaultTab(s: UiState, a: Actions) {
         }
     }
     GlassCard {
-        Body("Badges are read from your Profile: an account of the PledgeX program that settle updates. It can't be sold or transferred, which is what makes it soulbound.", TextLo, 13)
+        Body("Badges are read from your Profile: an account of the PledgeX program that settle updates. It can't be sold or transferred, which is what makes it soulbound. Only real pledges (days of an hour or more) earn badges and rank; demo pledges move the money but can't be farmed for them.", TextLo, 13)
         if (p != null) TextButton(onClick = { open(explorerAddress(p.address)) }) { Text("View your Profile account ↗", color = Cyan, fontSize = 13.sp) }
     }
     Overline("Immutable audit trail")

@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 use crate::errors::PledgeError;
-use crate::state::{kind, Commitment, CommitmentCreatedEvent, Profile, COMMITMENT_SEED, PROFILE_SEED, VAULT_SEED};
+use crate::state::{kind, Commitment, CommitmentCreatedEvent, Profile, COMMITMENT_SEED, PROFILE_SEED, SKR_MINT, VAULT_SEED};
 
 pub const MIN_DAY_SEC: u64 = 60;
 pub const MAX_DAY_SEC: u64 = 7 * 86_400;
@@ -54,6 +54,8 @@ pub struct CreateCommitment<'info> {
     )]
     pub user_token_account: Account<'info, TokenAccount>,
 
+    /// Stakes are in test SKR only, so a record cannot be built on a worthless token.
+    #[account(address = SKR_MINT)]
     pub token_mint: Account<'info, Mint>,
 
     pub token_program: Program<'info, Token>,

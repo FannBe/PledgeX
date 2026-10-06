@@ -138,8 +138,10 @@ class DevnetE2ETest {
         val p = Profile.decode(profileAddress, account(profileAddress)!!)
         assertEquals(owner.address, p.authority)
         assertEquals(1, p.settled)
-        assertEquals(1, p.perfect)
-        assertEquals(true, p.perfectIn(Kind.WAKE))
+        // A 60-second day is a demo day: it returns the money but earns no badge or rank.
+        assertEquals(0, p.perfect)
+        assertEquals(false, p.perfectIn(Kind.WAKE))
+        assertEquals(0, p.realDaysKept)
         assertEquals(stake, p.returned)
         println("profile ${p.started} started, ${p.perfect} perfect, kinds ${p.perfectKinds}")
     }
