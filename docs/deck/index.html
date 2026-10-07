@@ -22,6 +22,8 @@ html, body { margin: 0; background: #04050A; color: #E8ECF8; font-family: 'Plus 
 .bar b { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 18px; }
 .bar b span { color: #19FB9B; }
 .bar .sp { flex: 1; }
+.bar b { white-space: nowrap; } .bar i { font-style: normal; }
+@media (max-width: 560px) { .bar i, .bar a[href="../"] { display: none; } .bar { gap: 10px; } }
 .bar a { color: #A0B4D0; text-decoration: none; font-size: 14px; padding: 8px 14px; border: 1px solid #262E4A; border-radius: 999px; white-space: nowrap; }
 .bar a:hover { color: #19FB9B; border-color: #13B37A; }
 .bar button { font: inherit; font-size: 14px; color: #07080F; background: #19FB9B; border: 0; border-radius: 999px; padding: 8px 16px; cursor: pointer; font-weight: 600; }
@@ -58,7 +60,7 @@ body.present .frame.on { display: block; }
 <body>
 <div class="bar">
   <img src="../icon.png" alt="">
-  <b>Pledge<span>X</span> · Pitch Deck</b>
+  <b>Pledge<span>X</span><i> · Pitch Deck</i></b>
   <span class="sp"></span>
   <a href="../">Website</a>
   <a href="pledgex-deck.pdf" download>PDF</a>
