@@ -65,6 +65,7 @@ import com.pledgex.app.WalletKind
 import com.pledgex.app.chain.Kind
 import com.pledgex.app.chain.PledgeProgram
 import com.pledgex.app.formatSkr
+import com.pledgex.app.kindLabel
 import com.solana.mobilewalletadapter.clientlib.ActivityResultSender
 
 enum class Tab(val label: String, val glyph: Glyph) { Active("Active", Glyph.Bolt), Explore("Explore", Glyph.Compass), Ranks("Ranks", Glyph.Bars), Vault("Vault", Glyph.Shield) }
@@ -277,7 +278,10 @@ private fun Welcome(s: UiState, vm: PledgeViewModel, sender: ActivityResultSende
 @Composable
 private fun JudgeLab(s: UiState, a: Actions, onClose: () -> Unit) {
     val vm = a.vm
-    val c = s.commitment
+    // Only a demo pledge belongs to the tour. A real one (a day of an hour or more) is
+    // the wallet's own business, and one pledge per wallet means the Lab can't start.
+    val real = s.commitment?.takeUnless { it.isDemo }
+    val c = s.commitment?.takeIf { it.isDemo }
     val r = s.lastResult
     // Each step is read from the current pledge (or the one just settled), never from
     // older history, and a step only counts once every step before it does.
@@ -301,6 +305,15 @@ private fun JudgeLab(s: UiState, a: Actions, onClose: () -> Unit) {
                 Heading("Judge Lab", 22); Spacer(Modifier.weight(1f)); Tag("REAL DEVNET TXS", Mint)
             }
             Body("The whole life of a pledge in about six minutes: demo pledges use 2-minute days. Nothing here is simulated except the steps you add, which are labelled.")
+            if (real != null) GlassCard(padding = 14.dp) {
+                Text("This wallet already has a real pledge", color = Gold, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(4.dp))
+                Body("Your ${real.totalDays}-day ${kindLabel(real.kind).lowercase()} pledge is running, and a wallet holds one pledge at a time. Run the tour on another wallet: the demo wallet on this phone, or a second account in your wallet app. Your real pledge stays as it is.")
+                Spacer(Modifier.height(10.dp))
+                GradientButton("Use the demo wallet", busy = "airdrop" in s.pending || "sponsor" in s.pending) { vm.useDemoWallet() }
+                Spacer(Modifier.height(8.dp))
+                GhostButton("Disconnect, then pick another account", color = Cyan) { vm.disconnect(); onClose() }
+            }
             LabStep(1, "Fund the wallet", done[0], current == 0, "Devnet SOL for fees and deposits") {
                 GradientButton("Get devnet SOL", busy = "airdrop" in s.pending || "sponsor" in s.pending) { vm.airdrop() }
             }
@@ -308,7 +321,7 @@ private fun JudgeLab(s: UiState, a: Actions, onClose: () -> Unit) {
                 GradientButton("Get 10,000 test SKR", busy = "faucet" in s.pending) { vm.getTestSkr(a.sender) }
             }
             LabStep(3, "Lock a 3-day demo pledge", done[2], current == 2, "3,000 steps a day, 1,000 test SKR, 2-minute days") {
-                GradientButton("Lock demo pledge", busy = "create" in s.pending) {
+                GradientButton("Lock demo pledge", enabled = real == null, busy = "create" in s.pending) {
                     vm.dismissResult(); a.create(HabitSpec("Demo · 3K steps", Kind.STEPS, 3_000, 3, 1_000, demo = true)); onClose()
                 }
             }
@@ -322,7 +335,7 @@ private fun JudgeLab(s: UiState, a: Actions, onClose: () -> Unit) {
                 vm.dismissResult(); a.create(HabitSpec("Demo · 3K steps", Kind.STEPS, 3_000, 3, 1_000, demo = true)); onClose()
             }
             Body("Also try the 6 AM Club in demo: check-in is accepted only in the first 40 s of each 2-minute day, and Solana's clock decides.", TextLo, 13)
-            GhostButton("Lock a demo 6 AM Club pledge", enabled = c == null, color = Gold) {
+            GhostButton("Lock a demo 6 AM Club pledge", enabled = s.commitment == null, color = Gold) {
                 a.create(HabitSpec("Demo · 6 AM Club", Kind.WAKE, 0, 3, 1_000, demo = true)); onClose()
             }
         }
