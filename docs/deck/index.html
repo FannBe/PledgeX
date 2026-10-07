@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PledgeX · Pitch Deck</title>
+<meta name="description" content="PledgeX pitch deck: stake SKR on a daily habit. Keep the day and it comes back, miss it and it burns. Live on Solana devnet.">
+<meta property="og:title" content="PledgeX · Pitch Deck">
+<meta property="og:description" content="Put your habits on the line. Habit pledges on Solana, built for Android.">
+<meta property="og:image" content="https://fannbe.github.io/PledgeX/og.png">
+<link rel="icon" href="../favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Plus+Jakarta+Sans:wght@400..700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #04050A; color: #E8ECF8; font-family: 'Plus Jakarta Sans', Arial, sans-serif; }
+.bar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 16px; padding: 12px 16px;
+  background: rgba(4,5,10,.85); backdrop-filter: blur(10px); border-bottom: 1px solid #1A2038; }
+.bar img { width: 28px; height: 28px; border-radius: 7px; }
+.bar b { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 18px; }
+.bar b span { color: #19FB9B; }
+.bar .sp { flex: 1; }
+.bar a { color: #A0B4D0; text-decoration: none; font-size: 14px; padding: 8px 14px; border: 1px solid #262E4A; border-radius: 999px; white-space: nowrap; }
+.bar a:hover { color: #19FB9B; border-color: #13B37A; }
+.bar button { font: inherit; font-size: 14px; color: #07080F; background: #19FB9B; border: 0; border-radius: 999px; padding: 8px 16px; cursor: pointer; font-weight: 600; }
+.deck { max-width: 1280px; margin: 0 auto; padding: 24px 16px 64px; display: flex; flex-direction: column; gap: 24px; }
+.frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 14px;
+  border: 1px solid #1A2038; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+.slide { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; transform: scale(var(--k, .5)); }
+.slide section { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+.slide h1, .slide h2, .slide h3, .slide p { margin: 0; }
+.slide img { display: block; flex: none; }
+.slide a { text-decoration: none; }
+.slide table { width: 100%; border-collapse: collapse; }
+.slide th, .slide td { padding: 20px 28px; text-align: left; vertical-align: top; border-bottom: 1px solid #1D2440; }
+.slide th { font-weight: 600; }
+.hint { text-align: center; color: #7F8DAD; font-size: 14px; }
+/* Present: one slide at a time, full screen, arrow keys or tap */
+body.present { overflow: hidden; background: #000; }
+body.present .bar, body.present .hint { display: none; }
+body.present .deck { max-width: none; padding: 0; gap: 0; }
+body.present .frame { display: none; position: fixed; inset: 0; margin: auto; width: min(100vw, 177.78vh); height: auto;
+  border: 0; border-radius: 0; box-shadow: none; }
+body.present .frame.on { display: block; }
+@media print {
+  @page { size: 1920px 1080px; margin: 0; }
+  .bar, .hint { display: none; }
+  body { background: #07080F; }
+  .deck { max-width: none; padding: 0; gap: 0; display: block; }
+  .frame { width: 1920px; height: 1080px; aspect-ratio: auto; border: 0; border-radius: 0; box-shadow: none; break-after: page; }
+  .slide { transform: none; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+<div class="bar">
+  <img src="../icon.png" alt="">
+  <b>Pledge<span>X</span> · Pitch Deck</b>
+  <span class="sp"></span>
+  <a href="../">Website</a>
+  <a href="pledgex-deck.pdf" download>PDF</a>
+  <button type="button" id="present">Present</button>
+</div>
+<main class="deck">
+<div class="frame"><div class="slide"><section id="cover" data-transition="fade" style="background:radial-gradient(ellipse at 78% 22%, #24134F 0%, #07080F 62%);color:#E8ECF8;font-family:'Plus Jakarta Sans', Arial, sans-serif;padding:128px;display:grid;grid-template-columns:1fr 520px;gap:96px;align-items:center">
+<div style="position:absolute;left:0;top:0;width:1920px;height:1080px;background:repeating-linear-gradient(90deg, rgba(120,140,255,0.07) 0px, rgba(120,140,255,0.07) 1px, transparent 1px, transparent 96px)"></div>
+<div style="position:absolute;left:0;top:0;width:1920px;height:1080px;background:repeating-linear-gradient(0deg, rgba(120,140,255,0.07) 0px, rgba(120,140,255,0.07) 1px, transparent 1px, transparent 96px)"></div>
+<div style="display:flex;flex-direction:column;gap:32px">
+<img src="../icon.png" alt="PledgeX logo: a shield with an hourglass and wings" style="width:128px;height:128px;object-fit:contain;border-radius:28px;box-shadow:0 0 48px rgba(153,69,255,0.45)">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:4px;color:#19FB9B;text-transform:uppercase">Solana · Android · Live on devnet</p>
+<h1 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:160px;font-weight:700;line-height:1;letter-spacing:-4px;color:#E8ECF8">Pledge<span style="color:#19FB9B">X</span></h1>
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;line-height:1.2;color:#E8ECF8">Put your habits on the line.</p>
+<p style="font-size:32px;line-height:1.4;color:#A0B4D0">Stake SKR on a daily habit. Keep the day and it comes back. Miss it and it burns.</p>
+<div style="display:flex;flex-direction:row;gap:16px;flex-wrap:wrap">
+<p style="font-size:24px;color:#19FB9B;background:rgba(25,251,155,0.08);border:1px solid rgba(25,251,155,0.45);border-radius:999px;padding:10px 24px">Real devnet transactions</p>
+<p style="font-size:24px;color:#C9A6FF;background:rgba(153,69,255,0.10);border:1px solid rgba(153,69,255,0.55);border-radius:999px;padding:10px 24px">Mobile Wallet Adapter</p>
+<p style="font-size:24px;color:#7FE7FF;background:rgba(0,194,255,0.08);border:1px solid rgba(0,194,255,0.45);border-radius:999px;padding:10px 24px">Soulbound badge NFTs</p>
+</div>
+</div>
+<img src="../screens/active.jpg" alt="PledgeX Active screen: a 3,000-step demo pledge on day 2 of 3, 66% done, 1,000 SKR in escrow" style="width:520px;height:772px;object-fit:contain;border-radius:32px;border:2px solid rgba(25,251,155,0.55);box-shadow:0 0 96px rgba(25,251,155,0.22);background:#07080F">
+
+</section></div></div>
+<div class="frame"><div class="slide"><section id="problem" data-transition="fade" style="background:#07080F;color:#E8ECF8;font-family:'Plus Jakarta Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:4px;color:#19FB9B;text-transform:uppercase">The problem</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#E8ECF8">Habit apps are free to quit</h2>
+</div>
+<div style="display:flex;flex-direction:row;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:linear-gradient(160deg, #161B2E 0%, #0A0C16 100%);border:1px solid #262E4A;border-radius:20px;padding:40px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;font-weight:600;line-height:1.2;color:#E8ECF8">A streak costs nothing</h3>
+<p style="font-size:32px;line-height:1.4;color:#A0B4D0">Break it and nothing happens. After the first busy week, most people stop.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:linear-gradient(160deg, #161B2E 0%, #0A0C16 100%);border:1px solid #262E4A;border-radius:20px;padding:40px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;font-weight:600;line-height:1.2;color:#E8ECF8">Points fade fast</h3>
+<p style="font-size:32px;line-height:1.4;color:#A0B4D0">Badges and points feel good on day one. By day ten they mean nothing.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:linear-gradient(160deg, #161B2E 0%, #0A0C16 100%);border:1px solid #262E4A;border-radius:20px;padding:40px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;font-weight:600;line-height:1.2;color:#E8ECF8">Loss works, trust doesn't</h3>
+<p style="font-size:32px;line-height:1.4;color:#A0B4D0">People fight harder not to lose. Commitment apps use that, but a company holds the money.</p>
+</div>
+</div>
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;line-height:1.2;color:#19FB9B">What if missing a day cost you something real, and nobody could cheat?</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#7F8DAD">PLEDGEX · 02</p>
+
+</section></div></div>
+<div class="frame"><div class="slide"><section id="how" data-transition="fade" style="background:#0E1222;color:#E8ECF8;font-family:'Plus Jakarta Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:4px;color:#19FB9B;text-transform:uppercase">How it works</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#E8ECF8">One pledge, three steps</h2>
+</div>
+<div style="display:flex;flex-direction:row;gap:24px;align-items:center">
+<div style="flex:1;align-self:stretch;display:flex;flex-direction:column;gap:16px;background:linear-gradient(160deg, #1A2038 0%, #0A0C16 100%);border:1px solid #6B3FD0;border-radius:20px;padding:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:44px;font-weight:600;color:#C9A6FF">01</p>
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;font-weight:600;line-height:1.2;color:#E8ECF8">Lock</h3>
+<p style="font-size:32px;line-height:1.4;color:#A0B4D0">Pick a habit, the days and a stake. Your SKR goes into an escrow nobody can touch, not even us.</p>
+</div>
+<svg viewBox="0 0 56 28" width="56" height="28" style="flex:none" aria-hidden="true"><polygon points="0,9 34,9 34,0 56,14 34,28 34,19 0,19" fill="#2B3558"/></svg>
+<div style="flex:1;align-self:stretch;display:flex;flex-direction:column;gap:16px;background:linear-gradient(160deg, #1A2038 0%, #0A0C16 100%);border:1px solid #1F9E8A;border-radius:20px;padding:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:44px;font-weight:600;color:#7FE7FF">02</p>
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;font-weight:600;line-height:1.2;color:#E8ECF8">Check in</h3>
+<p style="font-size:32px;line-height:1.4;color:#A0B4D0">Keep the day, then tap Check in. A key on your phone signs it. No wallet popup.</p>
+</div>
+<svg viewBox="0 0 56 28" width="56" height="28" style="flex:none" aria-hidden="true"><polygon points="0,9 34,9 34,0 56,14 34,28 34,19 0,19" fill="#2B3558"/></svg>
+<div style="flex:1;align-self:stretch;display:flex;flex-direction:column;gap:16px;background:linear-gradient(160deg, #1A2038 0%, #0A0C16 100%);border:1px solid #13B37A;border-radius:20px;padding:40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:44px;font-weight:600;color:#19FB9B">03</p>
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;font-weight:600;line-height:1.2;color:#E8ECF8">Settle</h3>
+<p style="font-size:32px;line-height:1.4;color:#A0B4D0">Kept days come back to you. Missed days are burned. Anyone can settle, and a bot does it hourly.</p>
+</div>
+</div>
+<div style="display:flex;flex-direction:row;gap:32px;align-items:center;background:#07080F;border:1px solid #262E4A;border-radius:16px;padding:24px 40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;color:#7F8DAD">EXAMPLE</p>
+<p style="font-size:32px;color:#E8ECF8">7 days · 1,500 SKR · keep 5, miss 2 →</p>
+<p style="font-size:32px;color:#19FB9B">1,071.43 back</p>
+<p style="font-size:32px;color:#FF6B5E">428.57 burned</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#7F8DAD">PLEDGEX · 03</p>
+
+</section></div></div>
+<div class="frame"><div class="slide"><section id="burn" data-transition="fade" style="background:linear-gradient(135deg, #2A0F63 0%, #4C1D95 55%, #0B3B3A 100%);color:#F4F1FF;font-family:'Plus Jakarta Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:4px;color:#7DFFC8;text-transform:uppercase">The rule that keeps us honest</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:120px;font-weight:700;line-height:1.05;letter-spacing:-2px;color:#F4F1FF">We never win<br>when you fail.</h2>
+<p style="font-size:44px;line-height:1.35;color:#DCD3F7;width:1400px">A missed day is burned with a real token burn. It is not sent to us and not shared with other users. We only grow when people keep going.</p>
+
+</section></div></div>
+<div class="frame"><div class="slide"><section id="habits" data-transition="fade" style="background:#07080F;color:#E8ECF8;font-family:'Plus Jakarta Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:4px;color:#19FB9B;text-transform:uppercase">The habits</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#E8ECF8">Three habits, three ways to check</h2>
+</div>
+<table style="font-family:'Plus Jakarta Sans', Arial, sans-serif;font-size:32px;color:#C4D2E8;padding:20px 28px">
+<tr style="background:#161B2E"><th style="width:20%;color:#19FB9B">Habit</th><th style="width:24%;color:#19FB9B">Daily goal</th><th style="width:34%;color:#19FB9B">Who checks it</th><th style="width:22%;color:#19FB9B">Check-in window</th></tr>
+<tr style="background:#0B0E1A"><td style="color:#E8ECF8">Steps</td><td>5,000 or 10,000 steps</td><td>The phone's step sensor, read in the background</td><td>Any time that day</td></tr>
+<tr style="background:#07080F"><td style="color:#E8ECF8">6 AM Club</td><td>Be up early</td><td>Solana's own clock, on chain</td><td>05:00 to 06:00 only</td></tr>
+<tr style="background:#0B0E1A"><td style="color:#E8ECF8">Screen detox</td><td>Under 2 hours of screen time</td><td>Android usage statistics</td><td>Last 2 hours of the day</td></tr>
+</table>
+<div style="display:flex;flex-direction:row;gap:24px;align-items:center;background:rgba(232,197,71,0.07);border:1px solid rgba(232,197,71,0.45);border-radius:16px;padding:24px 40px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;color:#E8C547">DEMO MODE</p>
+<p style="font-size:32px;color:#E8ECF8">2-minute days and labelled simulated steps: a whole pledge in 6 minutes.</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#7F8DAD">PLEDGEX · 05</p>
+
+</section></div></div>
+<div class="frame"><div class="slide"><section id="app" data-transition="fade" style="background:#0E1222;color:#E8ECF8;font-family:'Plus Jakarta Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:4px;color:#19FB9B;text-transform:uppercase">The app</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#E8ECF8">From pick to payout</h2>
+</div>
+<div style="display:flex;flex-direction:row;gap:40px;justify-content:space-between">
+<div style="display:flex;flex-direction:column;gap:16px;width:324px">
+<img src="../screens/explore.jpg" alt="Explore tab: habit presets with their goal, days and stake" style="width:324px;height:480px;object-fit:contain;border-radius:20px;border:1px solid #2B3558;background:#07080F">
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:32px;font-weight:600;color:#E8ECF8">Explore</p>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">Pick a habit and see every rule before you sign.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px;width:324px">
+<img src="../screens/active.jpg" alt="Active tab: today's ring, the countdown and the stake" style="width:324px;height:480px;object-fit:contain;border-radius:20px;border:1px solid #2B3558;background:#07080F">
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:32px;font-weight:600;color:#E8ECF8">Active</p>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">Today's progress, the deadline, and what is at risk.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px;width:324px">
+<img src="../screens/settle.jpg" alt="Settle screen: 1 of 7 days kept, 142.86 SKR back, 857.14 SKR burned" style="width:324px;height:480px;object-fit:contain;border-radius:20px;border:1px solid #2B3558;background:#07080F">
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:32px;font-weight:600;color:#E8ECF8">Settle</p>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">Kept days back, missed days burned, in one tap.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px;width:324px">
+<img src="../screens/vault.jpg" alt="Vault tab: totals returned and burned, six badges and the audit trail" style="width:324px;height:480px;object-fit:contain;border-radius:20px;border:1px solid #2B3558;background:#07080F">
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:32px;font-weight:600;color:#E8ECF8">Vault</p>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">Totals, badge NFTs and every transaction.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#7F8DAD">PLEDGEX · 06 · real screenshots from a Galaxy Tab S7+</p>
+
+</section></div></div>
+<div class="frame"><div class="slide"><section id="mobile" data-transition="fade" style="background:#07080F;color:#E8ECF8;font-family:'Plus Jakarta Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:4px;color:#19FB9B;text-transform:uppercase">Mobile native</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#E8ECF8">Built for the phone, not ported</h2>
+</div>
+<div style="display:flex;flex-direction:row;gap:64px;align-items:center">
+<div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:40px 48px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;flex-direction:row;gap:16px;align-items:center"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#C9A6FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:32px;font-weight:600;color:#E8ECF8">Mobile Wallet Adapter</p></div>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">Connect, sign and send with Solflare or Phantom.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;flex-direction:row;gap:16px;align-items:center"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#19FB9B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none" aria-hidden="true"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg><p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:32px;font-weight:600;color:#E8ECF8">One-tap phone key</p></div>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">A session key guarded by Android Keystore. Check in and settle with no popup.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;flex-direction:row;gap:16px;align-items:center"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#7FE7FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:32px;font-weight:600;color:#E8ECF8">Step sensor</p></div>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">Hardware step counter, sampled every 30 minutes and after a reboot.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;flex-direction:row;gap:16px;align-items:center"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#E8C547" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:32px;font-weight:600;color:#E8ECF8">Screen time</p></div>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">Android usage stats; going over the limit turns the day red.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;flex-direction:row;gap:16px;align-items:center"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#C9A6FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:32px;font-weight:600;color:#E8ECF8">Home-screen widget</p></div>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">Today's goal and a live countdown, without opening the app.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;flex-direction:row;gap:16px;align-items:center"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#19FB9B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg><p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:32px;font-weight:600;color:#E8ECF8">Reminders and feel</p></div>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">Daily reminders, haptics, confetti and a share card.</p>
+</div>
+</div>
+<img src="../screens/widget.jpg" alt="The PledgeX home-screen widget with today's habit and a live countdown" style="width:520px;height:465px;object-fit:contain;border-radius:24px;border:1px solid #2B3558;box-shadow:0 0 64px rgba(153,69,255,0.25);background:#0E1222">
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#7F8DAD">PLEDGEX · 07</p>
+
+</section></div></div>
+<div class="frame"><div class="slide"><section id="skr" data-transition="fade" style="background:#0E1222;color:#E8ECF8;font-family:'Plus Jakarta Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:4px;color:#19FB9B;text-transform:uppercase">SKR integration</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#E8ECF8">SKR is the stake, and the only one</h2>
+</div>
+<div style="display:flex;flex-direction:row;gap:24px;align-items:center">
+<div style="width:400px;display:flex;flex-direction:column;gap:8px;background:linear-gradient(160deg, #1A2038 0%, #0A0C16 100%);border:1px solid #2B3558;border-radius:20px;padding:28px 32px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;font-weight:600;line-height:1.2;color:#E8ECF8">Your wallet</h3>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">You choose the stake in SKR and approve once.</p>
+</div>
+<svg viewBox="0 0 56 28" width="56" height="28" style="flex:none" aria-hidden="true"><polygon points="0,9 34,9 34,0 56,14 34,28 34,19 0,19" fill="#6B3FD0"/></svg>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:linear-gradient(160deg, #24164A 0%, #0A0C16 100%);border:1px solid #9945FF;border-radius:20px;padding:28px 32px;box-shadow:0 0 48px rgba(153,69,255,0.25)">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;font-weight:600;line-height:1.2;color:#E8ECF8">Escrow vault</h3>
+<p style="font-size:24px;line-height:1.4;color:#C4B5EC">Owned by the program, not by us. The program checks the mint: any other token is refused.</p>
+</div>
+<svg viewBox="0 0 56 28" width="56" height="28" style="flex:none" aria-hidden="true"><polygon points="0,9 34,9 34,0 56,14 34,28 34,19 0,19" fill="#6B3FD0"/></svg>
+<div style="width:440px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-direction:column;gap:8px;background:rgba(25,251,155,0.07);border:1px solid #13B37A;border-radius:20px;padding:28px 32px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;font-weight:600;line-height:1.2;color:#19FB9B">Kept day</h3>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">Its share comes back to you at settle.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;background:rgba(255,69,58,0.07);border:1px solid #C2382F;border-radius:20px;padding:28px 32px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;font-weight:600;line-height:1.2;color:#FF6B5E">Missed day</h3>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">Its share is burned. SKR supply goes down.</p>
+</div>
+</div>
+</div>
+<div style="display:flex;flex-direction:row;gap:24px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;border-top:3px solid #E8C547;padding:20px 0px 0px 0px">
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:32px;font-weight:600;color:#E8ECF8">Test SKR on devnet</p>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">Real SKR lives on mainnet, so devnet uses a test mint.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;border-top:3px solid #E8C547;padding:20px 0px 0px 0px">
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:32px;font-weight:600;color:#E8ECF8">Faucet inside the program</p>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">One tap for 10,000 test SKR. No server, no secret key.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;border-top:3px solid #E8C547;padding:20px 0px 0px 0px">
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:32px;font-weight:600;color:#E8ECF8">Mainnet is one constant</p>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">Point the program at the real SKR mint and redeploy.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#7F8DAD">PLEDGEX · 08</p>
+
+</section></div></div>
+<div class="frame"><div class="slide"><section id="chain" data-transition="fade" style="background:#07080F;color:#E8ECF8;font-family:'Plus Jakarta Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:4px;color:#19FB9B;text-transform:uppercase">Under the hood</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#E8ECF8">The rules live on Solana</h2>
+</div>
+<div style="display:flex;flex-direction:row;gap:24px;align-items:center">
+<div style="width:440px;align-self:stretch;display:flex;flex-direction:column;gap:16px;background:linear-gradient(160deg, #161B2E 0%, #0A0C16 100%);border:1px solid #262E4A;border-radius:20px;padding:32px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;font-weight:600;line-height:1.2;color:#E8ECF8">Android app</h3>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0"><span style="color:#C9A6FF">Wallet (MWA) signs:</span> lock, faucet, badge claim</p>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0"><span style="color:#19FB9B">Phone key signs:</span> check in, settle</p>
+</div>
+<svg viewBox="0 0 56 28" width="56" height="28" style="flex:none" aria-hidden="true"><polygon points="0,9 34,9 34,0 56,14 34,28 34,19 0,19" fill="#2B3558"/></svg>
+<div style="flex:1;align-self:stretch;display:flex;flex-direction:column;gap:16px;background:linear-gradient(160deg, #24164A 0%, #0A0C16 100%);border:1px solid #9945FF;border-radius:20px;padding:32px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;font-weight:600;line-height:1.2;color:#E8ECF8">PledgeX program</h3>
+<div style="display:flex;flex-direction:row;flex-wrap:wrap;gap:12px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#E8ECF8;background:#1E1640;border:1px solid #4B2E99;border-radius:8px;padding:6px 14px">create_commitment</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#E8ECF8;background:#1E1640;border:1px solid #4B2E99;border-radius:8px;padding:6px 14px">check_in</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#E8ECF8;background:#1E1640;border:1px solid #4B2E99;border-radius:8px;padding:6px 14px">settle</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#E8ECF8;background:#1E1640;border:1px solid #4B2E99;border-radius:8px;padding:6px 14px">faucet</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#E8ECF8;background:#1E1640;border:1px solid #4B2E99;border-radius:8px;padding:6px 14px">claim_badge</p>
+</div>
+<p style="font-size:24px;line-height:1.4;color:#C4B5EC">Anchor 0.32 · SPL Token + Token-2022</p>
+</div>
+<svg viewBox="0 0 56 28" width="56" height="28" style="flex:none" aria-hidden="true"><polygon points="0,9 34,9 34,0 56,14 34,28 34,19 0,19" fill="#2B3558"/></svg>
+<div style="width:440px;align-self:stretch;display:flex;flex-direction:column;gap:12px;background:linear-gradient(160deg, #161B2E 0%, #0A0C16 100%);border:1px solid #262E4A;border-radius:20px;padding:32px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;font-weight:600;line-height:1.2;color:#E8ECF8">Accounts</h3>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0"><span style="color:#E8ECF8">Commitment:</span> rules, kept days</p>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0"><span style="color:#E8ECF8">Vault:</span> the escrowed SKR</p>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0"><span style="color:#E8ECF8">Profile:</span> totals and streaks</p>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0"><span style="color:#E8ECF8">Badge mint:</span> soulbound NFT</p>
+</div>
+</div>
+<div style="display:flex;flex-direction:row;gap:24px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#0E1222;border:1px solid #262E4A;border-radius:16px;padding:24px 32px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;color:#7F8DAD">PROGRAM ID · DEVNET</p>
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#19FB9B">68c1eNdHAfNWJhCWhtqumiqzYyFcDNLkfgwKwdFwFRcd</p>
+</div>
+<div style="width:520px;display:flex;flex-direction:column;gap:8px;background:#0E1222;border:1px solid #262E4A;border-radius:16px;padding:24px 32px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;color:#7F8DAD">HOURLY SETTLE BOT</p>
+<p style="font-size:24px;color:#E8ECF8">Ended pledges settle even if you forget.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#7F8DAD">PLEDGEX · 09 · 26 end-to-end checks pass against the live devnet program</p>
+
+</section></div></div>
+<div class="frame"><div class="slide"><section id="badges" data-transition="fade" style="background:#0E1222;color:#E8ECF8;font-family:'Plus Jakarta Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:4px;color:#19FB9B;text-transform:uppercase">Soulbound badges</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#E8ECF8">Proof of discipline you can't buy</h2>
+</div>
+<div style="display:flex;flex-direction:row;gap:24px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px">
+<img src="../badges/0.png" alt="First Pledge badge" style="width:257px;height:257px;object-fit:cover;border-radius:16px;border:1px solid #2B3558">
+<p style="font-size:24px;line-height:1.35;color:#A0B4D0">Lock your first pledge</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px">
+<img src="../badges/1.png" alt="10K Pioneer badge" style="width:257px;height:257px;object-fit:cover;border-radius:16px;border:1px solid #2B3558">
+<p style="font-size:24px;line-height:1.35;color:#A0B4D0">Keep every day of a steps pledge</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px">
+<img src="../badges/2.png" alt="6 AM Club Hero badge" style="width:257px;height:257px;object-fit:cover;border-radius:16px;border:1px solid #2B3558">
+<p style="font-size:24px;line-height:1.35;color:#A0B4D0">Keep every day of a 6 AM pledge</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px">
+<img src="../badges/3.png" alt="Digital Detox badge" style="width:257px;height:257px;object-fit:cover;border-radius:16px;border:1px solid #2B3558">
+<p style="font-size:24px;line-height:1.35;color:#A0B4D0">Keep every day of a screen detox</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px">
+<img src="../badges/4.png" alt="Week Streak badge" style="width:257px;height:257px;object-fit:cover;border-radius:16px;border:1px solid #2B3558">
+<p style="font-size:24px;line-height:1.35;color:#A0B4D0">Keep 7 days in a row</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px">
+<img src="../badges/5.png" alt="Iron Will badge" style="width:257px;height:257px;object-fit:cover;border-radius:16px;border:1px solid #2B3558">
+<p style="font-size:24px;line-height:1.35;color:#A0B4D0">Finish 3 perfect pledges</p>
+</div>
+</div>
+<div style="display:flex;flex-direction:row;gap:24px">
+<div style="flex:1;display:flex;flex-direction:row;gap:16px;align-items:center;background:#07080F;border:1px solid #262E4A;border-radius:16px;padding:24px 28px"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#C9A6FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><p style="font-size:24px;line-height:1.4;color:#E8ECF8">Token-2022 NFT that can never be moved or sold</p></div>
+<div style="flex:1;display:flex;flex-direction:row;gap:16px;align-items:center;background:#07080F;border:1px solid #262E4A;border-radius:16px;padding:24px 28px"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#19FB9B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg><p style="font-size:24px;line-height:1.4;color:#E8ECF8">One per wallet, supply 1, mint authority removed</p></div>
+<div style="flex:1;display:flex;flex-direction:row;gap:16px;align-items:center;background:#07080F;border:1px solid #262E4A;border-radius:16px;padding:24px 28px"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#E8C547" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><p style="font-size:24px;line-height:1.4;color:#E8ECF8">Earned from real days only: demo days can't farm them</p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#7F8DAD">PLEDGEX · 10</p>
+
+</section></div></div>
+<div class="frame"><div class="slide"><section id="trust" data-transition="fade" style="background:#07080F;color:#E8ECF8;font-family:'Plus Jakarta Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:4px;color:#19FB9B;text-transform:uppercase">Integrity</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#E8ECF8">What the chain enforces, and what it can't yet</h2>
+</div>
+<div style="display:flex;flex-direction:row;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;background:linear-gradient(160deg, #0F2A24 0%, #0A0C16 100%);border:1px solid #13B37A;border-radius:20px;padding:40px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;font-weight:600;line-height:1.2;color:#19FB9B">Enforced on chain</h3>
+<div style="display:flex;flex-direction:row;gap:16px;align-items:center"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#19FB9B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><p style="font-size:24px;line-height:1.4;color:#E8ECF8">Only SKR can be staked</p></div>
+<div style="display:flex;flex-direction:row;gap:16px;align-items:center"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#19FB9B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><p style="font-size:24px;line-height:1.4;color:#E8ECF8">One check-in per day, inside that day</p></div>
+<div style="display:flex;flex-direction:row;gap:16px;align-items:center"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#19FB9B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><p style="font-size:24px;line-height:1.4;color:#E8ECF8">6 AM and screen windows timed by Solana's clock</p></div>
+<div style="display:flex;flex-direction:row;gap:16px;align-items:center"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#19FB9B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><p style="font-size:24px;line-height:1.4;color:#E8ECF8">Over the screen-time limit: check-in refused</p></div>
+<div style="display:flex;flex-direction:row;gap:16px;align-items:center"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#19FB9B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><p style="font-size:24px;line-height:1.4;color:#E8ECF8">Anyone can settle; nobody can keep the stake</p></div>
+<div style="display:flex;flex-direction:row;gap:16px;align-items:center"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#19FB9B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><p style="font-size:24px;line-height:1.4;color:#E8ECF8">Demo days earn no badges and no rank</p></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;background:linear-gradient(160deg, #2A2410 0%, #0A0C16 100%);border:1px solid #B8962E;border-radius:20px;padding:40px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;font-weight:600;line-height:1.2;color:#E8C547">Honest limits</h3>
+<p style="font-size:32px;line-height:1.4;color:#E8ECF8">Steps and screen minutes come from the phone, and the program trusts them.</p>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0"><span style="color:#E8C547">Next:</span> Android Key Attestation, checked on chain with the secp256r1 precompile, so only a real, unmodified phone can report.</p>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0"><span style="color:#E8C547">Today:</span> devnet only, test tokens. Nothing costs real money.</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#7F8DAD">PLEDGEX · 11</p>
+
+</section></div></div>
+<div class="frame"><div class="slide"><section id="judges" data-transition="fade" style="background:#0E1222;color:#E8ECF8;font-family:'Plus Jakarta Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:row;gap:80px;align-items:center">
+<div style="flex:1;display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:4px;color:#19FB9B;text-transform:uppercase">For judges</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#E8ECF8">Try a whole pledge in 6 minutes</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-direction:row;gap:20px;align-items:center"><p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:32px;font-weight:600;color:#19FB9B;width:56px">01</p><p style="font-size:32px;line-height:1.3;color:#E8ECF8">Install the APK from GitHub Releases</p></div>
+<div style="display:flex;flex-direction:row;gap:20px;align-items:center"><p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:32px;font-weight:600;color:#19FB9B;width:56px">02</p><p style="font-size:32px;line-height:1.3;color:#E8ECF8">Connect Solflare on devnet, or use the demo wallet</p></div>
+<div style="display:flex;flex-direction:row;gap:20px;align-items:center"><p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:32px;font-weight:600;color:#19FB9B;width:56px">03</p><p style="font-size:32px;line-height:1.3;color:#E8ECF8">Judge Lab: get devnet SOL and test SKR</p></div>
+<div style="display:flex;flex-direction:row;gap:20px;align-items:center"><p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:32px;font-weight:600;color:#19FB9B;width:56px">04</p><p style="font-size:32px;line-height:1.3;color:#E8ECF8">Lock a demo pledge, add steps, check in</p></div>
+<div style="display:flex;flex-direction:row;gap:20px;align-items:center"><p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:32px;font-weight:600;color:#19FB9B;width:56px">05</p><p style="font-size:32px;line-height:1.3;color:#E8ECF8">Miss a day, settle, claim your badge NFT</p></div>
+</div>
+<div style="display:flex;flex-direction:row;gap:16px;flex-wrap:wrap">
+<p style="font-size:24px;background:#07080F;border:1px solid #13B37A;border-radius:999px;padding:10px 24px"><a target="_blank" rel="noopener" href="https://github.com/FannBe/PledgeX/releases/latest" style="color:#19FB9B">Download the APK</a></p>
+<p style="font-size:24px;background:#07080F;border:1px solid #6B3FD0;border-radius:999px;padding:10px 24px"><a target="_blank" rel="noopener" href="https://fannbe.github.io/PledgeX" style="color:#C9A6FF">fannbe.github.io/PledgeX</a></p>
+<p style="font-size:24px;background:#07080F;border:1px solid #1F9E8A;border-radius:999px;padding:10px 24px"><a target="_blank" rel="noopener" href="https://github.com/FannBe/PledgeX" style="color:#7FE7FF">github.com/FannBe/PledgeX</a></p>
+</div>
+</div>
+<img src="../screens/judge-lab.jpg" alt="Judge Lab: five guided steps with real devnet transactions" style="width:480px;height:712px;object-fit:contain;border-radius:28px;border:2px solid rgba(153,69,255,0.6);box-shadow:0 0 80px rgba(153,69,255,0.25);background:#07080F">
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#7F8DAD">PLEDGEX · 12</p>
+
+</section></div></div>
+<div class="frame"><div class="slide"><section id="roadmap" data-transition="fade" style="background:#07080F;color:#E8ECF8;font-family:'Plus Jakarta Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:4px;color:#19FB9B;text-transform:uppercase">What's next</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:72px;font-weight:700;line-height:1.1;color:#E8ECF8">From devnet to every pocket</h2>
+</div>
+<div style="display:flex;flex-direction:row;gap:24px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:linear-gradient(160deg, #161B2E 0%, #0A0C16 100%);border-top:4px solid #E8C547;border-radius:16px;padding:36px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;color:#E8C547">FIRST</p>
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:32px;font-weight:600;line-height:1.25;color:#E8ECF8">Hardware attestation</h3>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">Android Key Attestation checked on chain, so step and screen data come from a real phone.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:linear-gradient(160deg, #161B2E 0%, #0A0C16 100%);border-top:4px solid #19FB9B;border-radius:16px;padding:36px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;color:#19FB9B">THEN</p>
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:32px;font-weight:600;line-height:1.25;color:#E8ECF8">Mainnet with real SKR</h3>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">An audit first, then real stakes. Each missed day burns real SKR.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:linear-gradient(160deg, #161B2E 0%, #0A0C16 100%);border-top:4px solid #7FE7FF;border-radius:16px;padding:36px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;color:#7FE7FF">MORE HABITS</p>
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:32px;font-weight:600;line-height:1.25;color:#E8ECF8">Health Connect</h3>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">Sleep and workouts from watches and other apps, through Android's health API.</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:linear-gradient(160deg, #161B2E 0%, #0A0C16 100%);border-top:4px solid #C9A6FF;border-radius:16px;padding:36px">
+<p style="font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;letter-spacing:3px;color:#C9A6FF">AT SCALE</p>
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:32px;font-weight:600;line-height:1.25;color:#E8ECF8">Compressed badges</h3>
+<p style="font-size:24px;line-height:1.4;color:#A0B4D0">Move badges to compressed NFTs so a million users cost almost nothing.</p>
+</div>
+</div>
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;line-height:1.2;color:#E8ECF8">And a home on the <span style="color:#19FB9B">Solana dApp Store</span>, where the phone and the wallet already meet.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#7F8DAD">PLEDGEX · 13</p>
+
+</section></div></div>
+<div class="frame"><div class="slide"><section id="close" data-transition="fade" style="background:radial-gradient(ellipse at 50% 30%, #24134F 0%, #07080F 65%);color:#E8ECF8;font-family:'Plus Jakarta Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:40px">
+<div style="position:absolute;left:0;top:0;width:1920px;height:1080px;background:repeating-linear-gradient(90deg, rgba(120,140,255,0.07) 0px, rgba(120,140,255,0.07) 1px, transparent 1px, transparent 96px)"></div>
+<div style="position:absolute;left:0;top:0;width:1920px;height:1080px;background:repeating-linear-gradient(0deg, rgba(120,140,255,0.07) 0px, rgba(120,140,255,0.07) 1px, transparent 1px, transparent 96px)"></div>
+<img src="../icon.png" alt="PledgeX logo" style="width:160px;height:160px;object-fit:contain;border-radius:36px;box-shadow:0 0 64px rgba(153,69,255,0.5)">
+<h1 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:120px;font-weight:700;line-height:1.05;letter-spacing:-2px;color:#E8ECF8;text-align:center">Put your habits<br>on the <span style="color:#19FB9B">line.</span></h1>
+<p style="font-size:32px;line-height:1.4;color:#A0B4D0;text-align:center">Open source · MIT licensed · live on Solana devnet</p>
+<div style="display:flex;flex-direction:row;gap:16px;justify-content:center">
+<p style="font-size:24px;background:#07080F;border:1px solid #13B37A;border-radius:999px;padding:10px 24px"><a target="_blank" rel="noopener" href="https://github.com/FannBe/PledgeX/releases/latest" style="color:#19FB9B">Download the APK</a></p>
+<p style="font-size:24px;background:#07080F;border:1px solid #6B3FD0;border-radius:999px;padding:10px 24px"><a target="_blank" rel="noopener" href="https://fannbe.github.io/PledgeX" style="color:#C9A6FF">fannbe.github.io/PledgeX</a></p>
+<p style="font-size:24px;background:#07080F;border:1px solid #1F9E8A;border-radius:999px;padding:10px 24px"><a target="_blank" rel="noopener" href="https://github.com/FannBe/PledgeX" style="color:#7FE7FF">github.com/FannBe/PledgeX</a></p>
+</div>
+
+</section></div></div>
+<p class="hint">Present: arrow keys, space or tap to move · Esc to leave</p>
+</main>
+<script>
+const frames = [...document.querySelectorAll('.frame')];
+const fit = () => frames.forEach(f => f.style.setProperty('--k', f.clientWidth / 1920));
+new ResizeObserver(fit).observe(document.body);
+let i = 0;
+const show = n => { i = Math.max(0, Math.min(frames.length - 1, n)); frames.forEach((f, j) => f.classList.toggle('on', j === i)); fit(); };
+const leave = () => { document.body.classList.remove('present'); frames.forEach(f => f.classList.remove('on')); fit(); frames[i].scrollIntoView({ block: 'center' }); };
+document.getElementById('present').onclick = () => {
+  const top = frames.findIndex(f => f.getBoundingClientRect().bottom > 80);
+  document.body.classList.add('present'); show(top < 0 ? 0 : top);
+  document.documentElement.requestFullscreen?.().catch(() => {});
+};
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('present')) leave(); });
+document.addEventListener('keydown', e => {
+  if (!document.body.classList.contains('present')) return;
+  if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); show(i + 1); }
+  else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); show(i - 1); }
+  else if (e.key === 'Escape') leave();
+});
+document.querySelector('.deck').addEventListener('click', e => {
+  if (!document.body.classList.contains('present') || e.target.closest('a')) return;
+  show(e.clientX < innerWidth / 3 ? i - 1 : i + 1);
+});
+</script>
+</body>
+</html>
